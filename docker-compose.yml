@@ -19,8 +19,8 @@ services:
     image: apache/activemq-artemis:latest
     container_name: artemis-broker
     environment:
-      - ARTEMIS_USERNAME=admin
-      - ARTEMIS_PASSWORD=admin
+      - ARTEMIS_USERNAME=admin_MOH123
+      - ARTEMIS_PASSWORD=admin_MOH123
       - ANONYMOUS_LOGIN=true
     ports:
       - "8161:8161"   # Console web

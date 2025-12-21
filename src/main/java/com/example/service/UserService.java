@@ -2,6 +2,7 @@ package com.example.service;
 
 import com.example.domain.User;
 import com.example.messaging.UserCreatedProducer;
+
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -17,7 +18,7 @@ public class UserService {
     UserCreatedProducer producer;
 
     public User createUser(String name, String email) {
-        User u = new User(name, email);
+        User u = new User(name, email, "", "");
         em.persist(u);
         producer.sendUserCreatedEvent(u);
         return u;
