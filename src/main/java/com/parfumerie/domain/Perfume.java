@@ -1,4 +1,4 @@
-package com.example.domain;
+package com.parfumerie.domain;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

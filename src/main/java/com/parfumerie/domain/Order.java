@@ -1,4 +1,4 @@
-package com.example.domain;
+package com.parfumerie.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,7 +26,7 @@ public class Order {
 
     // FK vers User
     @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
     private LocalDateTime orderDate;

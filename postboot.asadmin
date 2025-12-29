@@ -1,0 +1,2 @@
+create-jdbc-connection-pool --restype javax.sql.DataSource --datasourceclassname org.postgresql.ds.PGSimpleDataSource --property user=admin:password=admin:DatabaseName=starterdb:ServerName=db:PortNumber=5432 StarterPool
+create-jdbc-resource --connectionpoolid StarterPool jdbc/starterdb

@@ -2,55 +2,47 @@
 <persistence
         xmlns="https://jakarta.ee/xml/ns/persistence"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
-                            https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+        xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
         version="3.0">
 
-    <!-- PAR DÉFAUT : PostgreSQL via Docker (starter du prof) -->
-    <persistence-unit name="parfumeriePU" transaction-type="RESOURCE_LOCAL">
-        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <!-- ========================= -->
+    <!-- Production / Docker (PostgreSQL) -->
+    <!-- ========================= -->
+    <persistence-unit name="parfumeriePU" transaction-type="JTA">
+        <jta-data-source>jdbc/starterdb</jta-data-source>
 
-        <class>com.example.domain.User</class>
-        <class>com.example.domain.Perfume</class>
-        <class>com.example.domain.Order</class>
-        <class>com.example.domain.OrderItem</class>
+        <class>com.parfumerie.domain.User</class>
+        <class>com.parfumerie.domain.Perfume</class>
+        <class>com.parfumerie.domain.Order</class>
+        <class>com.parfumerie.domain.OrderItem</class>
 
         <properties>
-            <!-- PostgreSQL -->
-            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/starterdb"/>
-            <property name="jakarta.persistence.jdbc.user" value="admin"/>
-            <property name="jakarta.persistence.jdbc.password" value="admin"/>
-
-            <!-- Schéma -->
             <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
-
-            <!-- Logs SQL -->
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
         </properties>
     </persistence-unit>
 
-    <!-- H2 local (pour des tests rapides) -->
-    <persistence-unit name="parfumerieH2PU" transaction-type="RESOURCE_LOCAL">
-        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
-        <class>com.example.domain.User</class>
-        <class>com.example.domain.Perfume</class>
-        <class>com.example.domain.Order</class>
-        <class>com.example.domain.OrderItem</class>
+    <!-- ========================= -->
+    <!-- Test local (H2) -->
+    <!-- ========================= -->
+    <!-- <persistence-unit name="parfumerieH2PU" transaction-type="RESOURCE_LOCAL">
+        <class>com.parfumerie.domain.User</class>
+        <class>com.parfumerie.domain.Perfume</class>
+        <class>com.parfumerie.domain.Order</class>
+        <class>com.parfumerie.domain.OrderItem</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:~/parfumerie-db"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:./parfumerie-db"/>
             <property name="jakarta.persistence.jdbc.user" value="sa"/>
             <property name="jakarta.persistence.jdbc.password" value=""/>
 
             <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
-
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
         </properties>
-    </persistence-unit>
+    </persistence-unit> -->
 
 </persistence>

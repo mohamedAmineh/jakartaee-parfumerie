@@ -1,8 +1,10 @@
-package com.example.domain;
+package com.parfumerie.domain;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "users")
@@ -22,13 +24,16 @@ public class User {
     private String email;
 
     private String address;
+
+    @Pattern(regexp = "^0\\d{9}$", message = "Le numéro doit contenir 10 chiffres et commencer par 0")
+    @NotBlank(message = "Le numéro de téléphone est obligatoire")
     private String phone;
 
     @Column(nullable = false)
     private String password;
 
     // 1 User -> n Orders
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Order> orders = new ArrayList<>();
 
     public User() {}

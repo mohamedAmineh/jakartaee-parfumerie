@@ -1,7 +1,6 @@
 version: "3.9"
 
 services:
-
   db:
     image: postgres:15
     container_name: starter-db
@@ -19,14 +18,24 @@ services:
     image: apache/activemq-artemis:latest
     container_name: artemis-broker
     environment:
-      - ARTEMIS_USERNAME=admin_MOH123
-      - ARTEMIS_PASSWORD=admin_MOH123
+      - ARTEMIS_USER=adminMOH123
+      - ARTEMIS_PASSWORD=adminMOH123
       - ANONYMOUS_LOGIN=true
     ports:
-      - "8161:8161"   # Console web
-      - "61616:61616" # Port JMS
+      - "8161:8161"
+      - "61616:61616"
     volumes:
       - artemisdata:/var/lib/artemis-instance
+
+  app:
+    build: .
+    container_name: parfumerie-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - artemis
+    restart: unless-stopped
 
 volumes:
   dbdata:

@@ -1,4 +1,4 @@
-package com.example.config;
+package com.parfumerie.config;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;

@@ -1,13 +1,13 @@
-package com.example;
+package com.parfumerie;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.example.domain.Order;
-import com.example.domain.OrderItem;
-import com.example.domain.Perfume;
-import com.example.domain.User;
-import com.example.config.PersistenceManager;
+import com.parfumerie.config.PersistenceManager;
+import com.parfumerie.domain.Order;
+import com.parfumerie.domain.OrderItem;
+import com.parfumerie.domain.Perfume;
+import com.parfumerie.domain.User;
 
 import jakarta.persistence.EntityManager;
 
@@ -26,6 +26,7 @@ public class Main {
             p.setName("Dior Sauvage");
             p.setBrand("Dior");
             p.setPrice(new BigDecimal("89.90"));
+            p.setFormat("100ml");
             p.setAvailable(true);
             p.setStock(10);
             em.persist(p);
