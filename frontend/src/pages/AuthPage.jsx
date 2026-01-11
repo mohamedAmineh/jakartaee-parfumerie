@@ -3,6 +3,16 @@ import { useNavigate } from "react-router-dom";
 
 const LOGIN_URL = "http://localhost:8080/starter/api/auth/login";
 const SIGNUP_URL = "http://localhost:8080/starter/api/users";
+const getRoleValue = (role) => {
+  if (!role) return "";
+  if (typeof role === "string") return role;
+  if (typeof role === "object") {
+    if (role.name) return role.name;
+    if (role.role) return role.role;
+  }
+  return String(role);
+};
+const isAdminUser = (user) => getRoleValue(user?.role).toUpperCase() === "ADMIN";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -53,7 +63,7 @@ export default function AuthPage() {
     localStorage.setItem("user", JSON.stringify(user));
     setCurrentUser(user);
 
-    if (user.role === "ADMIN") navigate("/admin", { replace: true });
+    if (isAdminUser(user)) navigate("/admin", { replace: true });
     else setSuccess(`Connecte en tant que ${user.email}.`);
   }
 
@@ -101,7 +111,7 @@ export default function AuthPage() {
 
   return (
     <div style={styles.container}>
-      {currentUser && currentUser.role !== "ADMIN" && (
+      {currentUser && !isAdminUser(currentUser) && (
         <div style={styles.info}>
           <p style={styles.infoText}>
             Vous etes deja connecte en tant que {currentUser.email}.
