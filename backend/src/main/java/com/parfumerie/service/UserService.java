@@ -17,6 +17,8 @@ public class UserService {
     public User createUser(String firstName, String lastName, String email, String phone,
                            String plainPassword, String address, Role role) {
 
+        email = normalizeEmail(email);
+
         if (firstName == null || firstName.isBlank())
             throw new IllegalArgumentException("firstName is required");
         if (lastName == null || lastName.isBlank())
@@ -27,6 +29,9 @@ public class UserService {
             throw new IllegalArgumentException("phone is required");
         if (plainPassword == null || plainPassword.isBlank())
             throw new IllegalArgumentException("password is required");
+
+        if (findByEmail(email) != null)
+            throw new IllegalArgumentException("email deja utilise");
 
         String passwordHash = BCrypt.hashpw(plainPassword, BCrypt.gensalt(12));
 
@@ -48,15 +53,23 @@ public class UserService {
     }
 
     public User findByEmail(String email) {
+        email = normalizeEmail(email);
+        if (email == null || email.isBlank()) return null;
         TypedQuery<User> q = em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class);
         q.setParameter("email", email);
         return q.getResultStream().findFirst().orElse(null);
     }
 
     public User authenticate(String email, String plainPassword) {
+        email = normalizeEmail(email);
         User u = findByEmail(email);
         if (u == null) return null;
         if (!BCrypt.checkpw(plainPassword, u.getPassword())) return null;
         return u;
+    }
+
+    private String normalizeEmail(String email) {
+        if (email == null) return null;
+        return email.trim().toLowerCase();
     }
 }

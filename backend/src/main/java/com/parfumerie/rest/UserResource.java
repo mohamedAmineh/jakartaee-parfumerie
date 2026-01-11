@@ -29,9 +29,23 @@ public class UserResource {
 
     @POST
     public Response create(CreateUserRequest req) {
-        User created = userService.createUser(
-                req.firstName, req.lastName, req.email, req.phone, req.password, req.address, null
-        );
-        return Response.status(Response.Status.CREATED).entity(created).build();
+        if (req == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid payload").build();
+        }
+
+        try {
+            User created = userService.createUser(
+                    req.firstName, req.lastName, req.email, req.phone, req.password, req.address, null
+            );
+            return Response.status(Response.Status.CREATED)
+                    .entity(AuthResource.UserResponse.from(created))
+                    .build();
+        } catch (IllegalArgumentException e) {
+            String msg = e.getMessage() == null ? "Invalid request" : e.getMessage();
+            Response.Status status = msg.toLowerCase().contains("email") && msg.toLowerCase().contains("deja")
+                    ? Response.Status.CONFLICT
+                    : Response.Status.BAD_REQUEST;
+            return Response.status(status).entity(msg).build();
+        }
     }
 }

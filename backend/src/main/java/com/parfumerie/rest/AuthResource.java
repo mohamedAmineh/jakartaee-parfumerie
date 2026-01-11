@@ -30,7 +30,7 @@ public class AuthResource {
         public String email;
         public String phone;
         public String address;
-        public Object role;
+        public String role;
 
         public static UserResponse from(User u) {
             UserResponse r = new UserResponse();
@@ -40,7 +40,7 @@ public class AuthResource {
             r.email = u.getEmail();
             r.phone = u.getPhone();
             r.address = u.getAddress();
-            r.role = u.getRole();
+            r.role = u.getRole() != null ? u.getRole().name() : null;
             return r;
         }
     }

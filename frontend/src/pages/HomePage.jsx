@@ -8,10 +8,14 @@ const HomePage = () => {
       <p style={styles.subtitle}>
         Découvrez notre collection de parfums d'exception
       </p>
-      <Link to="/products" style={styles.button}>
-        Explorer le catalogue
-      </Link>
-      <Link to="/auth">Sign in / Sign up</Link>
+      <div style={styles.actions}>
+        <Link to="/products" style={styles.button}>
+          Explorer le catalogue
+        </Link>
+        <Link to="/auth" style={styles.secondaryButton}>
+          Sign in / Sign up
+        </Link>
+      </div>
     </div>
   );
 };
@@ -31,6 +35,13 @@ const styles = {
     color: '#666',
     marginBottom: '40px',
   },
+  actions: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
   button: {
     display: 'inline-block',
     padding: '15px 40px',
@@ -39,6 +50,16 @@ const styles = {
     textDecoration: 'none',
     borderRadius: '30px',
     fontSize: '18px',
+    fontWeight: 'bold',
+  },
+  secondaryButton: {
+    display: 'inline-block',
+    padding: '12px 28px',
+    borderRadius: '30px',
+    border: '2px solid #ff6b6b',
+    color: '#ff6b6b',
+    textDecoration: 'none',
+    fontSize: '16px',
     fontWeight: 'bold',
   },
 };
