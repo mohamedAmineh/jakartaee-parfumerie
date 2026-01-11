@@ -1,10 +1,12 @@
 package com.parfumerie.service;
 
+import com.parfumerie.domain.Role;
+import com.parfumerie.domain.User;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import org.mindrot.jbcrypt.BCrypt;
-import com.parfumerie.domain.User;
 
 @Stateless
 public class UserService {
@@ -12,7 +14,9 @@ public class UserService {
     @PersistenceContext(unitName = "parfumeriePU")
     private EntityManager em;
 
-    public User createUser(String firstName, String lastName, String email, String phone, String plainPassword, String address) {
+    public User createUser(String firstName, String lastName, String email, String phone,
+                           String plainPassword, String address, Role role) {
+
         if (firstName == null || firstName.isBlank())
             throw new IllegalArgumentException("firstName is required");
         if (lastName == null || lastName.isBlank())
@@ -32,7 +36,8 @@ public class UserService {
         u.setEmail(email);
         u.setPhone(phone);
         u.setPassword(passwordHash);
-        u.setAddress(address); // peut être null
+        u.setAddress(address);
+        u.setRole(role != null ? role : Role.CLIENT);
 
         em.persist(u);
         return u;
@@ -40,5 +45,18 @@ public class UserService {
 
     public User findUser(Long id) {
         return em.find(User.class, id);
+    }
+
+    public User findByEmail(String email) {
+        TypedQuery<User> q = em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class);
+        q.setParameter("email", email);
+        return q.getResultStream().findFirst().orElse(null);
+    }
+
+    public User authenticate(String email, String plainPassword) {
+        User u = findByEmail(email);
+        if (u == null) return null;
+        if (!BCrypt.checkpw(plainPassword, u.getPassword())) return null;
+        return u;
     }
 }

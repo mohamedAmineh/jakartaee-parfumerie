@@ -1,10 +1,11 @@
 package com.parfumerie.domain;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -32,20 +33,24 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    // ✅ Nouveau champ role
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Role role = Role.CLIENT; // défaut
+
     // 1 User -> n Orders
-    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private List<Order> orders = new ArrayList<>();
 
     public User() {}
 
     public User(String firstName, String lastName, String email, String password) {
         this.firstName = firstName;
-        this.lastName  = lastName;
-        this.email     = email;
-        this.password  = password;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.role = Role.CLIENT;
     }
-
-    // Getters / setters …
 
     public Long getId() { return id; }
 
@@ -66,6 +71,9 @@ public class User {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 
     public List<Order> getOrders() { return orders; }
     public void setOrders(List<Order> orders) { this.orders = orders; }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="parfumeriePU" transaction-type="JTA">
+        <jta-data-source>jdbc/starterdb</jta-data-source>
+
+        <class>com.parfumerie.domain.User</class>
+        <class>com.parfumerie.domain.Perfume</class>
+        <class>com.parfumerie.domain.Order</class>
+        <class>com.parfumerie.domain.OrderItem</class>
+
+        <properties>
+            <property name="eclipselink.ddl-generation" value="update"/>
+            <property name="eclipselink.ddl-generation.output-mode" value="database"/>
+            <property name="eclipselink.logging.level" value="FINE"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>
