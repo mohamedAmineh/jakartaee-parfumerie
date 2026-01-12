@@ -4,6 +4,7 @@ import com.parfumerie.domain.Order;
 import com.parfumerie.domain.OrderItem;
 import com.parfumerie.domain.Perfume;
 import com.parfumerie.domain.User;
+import com.parfumerie.service.NotificationService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
@@ -11,7 +12,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Path("orders")
@@ -22,6 +25,9 @@ public class OrderResource {
 
     @PersistenceContext(unitName = "parfumeriePU")
     private EntityManager em;
+
+    @jakarta.inject.Inject
+    private NotificationService notificationService;
 
     public static class OrderItemDto {
         public Long perfumeId;
@@ -65,6 +71,7 @@ public class OrderResource {
         order.setUser(user);
         order.setStatus(req.status != null ? req.status : "PENDING");
         order.setItems(new ArrayList<>());
+        order.setOrderDate(LocalDateTime.now());
 
         BigDecimal total = BigDecimal.ZERO;
 
@@ -88,8 +95,16 @@ public class OrderResource {
 
         order.setTotalPrice(total);
         em.persist(order);
+        notificationService.addOrderCreated(order);
 
-        return Response.status(Response.Status.CREATED).entity(order).build();
+        // Eviter les cycles de serialization, renvoyer un DTO minimal
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("id", order.getId());
+        result.put("status", order.getStatus());
+        result.put("total", order.getTotalPrice());
+        result.put("userEmail", user.getEmail());
+        result.put("createdAt", order.getOrderDate());
+        return Response.status(Response.Status.CREATED).entity(result).build();
     }
 
     @PUT

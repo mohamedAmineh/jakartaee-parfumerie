@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -38,6 +39,7 @@ public class Perfume {
     private String comment;
 
     @OneToMany(mappedBy = "perfume")
+    @JsonbTransient
     private List<OrderItem> orderItems = new ArrayList<>();
 
     public Perfume() {}

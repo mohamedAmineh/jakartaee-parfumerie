@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useFetch } from '../hooks/useFetch';
 import { fetchPerfumes } from '../services/api';
 import PerfumeCard from '../components/PerfumeCard';
@@ -9,23 +10,15 @@ const ProductsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
 
-  // Filtrer avec useMemo pour optimiser les performances
   const filteredPerfumes = useMemo(() => {
     return perfumes
-      .filter((p) =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .filter((p) =>
-        selectedBrand ? p.brand === selectedBrand : true
-      );
+      .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      .filter((p) => (selectedBrand ? p.brand === selectedBrand : true));
   }, [perfumes, searchTerm, selectedBrand]);
 
-  // Extraire les marques uniques (utilisation de reduce)
   const brands = useMemo(() => {
     return perfumes.reduce((acc, perfume) => {
-      if (!acc.includes(perfume.brand)) {
-        acc.push(perfume.brand);
-      }
+      if (!acc.includes(perfume.brand)) acc.push(perfume.brand);
       return acc;
     }, []);
   }, [perfumes]);
@@ -34,58 +27,140 @@ const ProductsPage = () => {
   if (error) return <div style={styles.error}>Erreur: {error}</div>;
 
   return (
-    <div style={styles.container}>
-      <h1>Catalogue de Parfums</h1>
-      
-      <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+    <div style={styles.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600&display=swap');
+        .catalog-wrap {
+          max-width: 1200px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 1;
+        }
+        .catalog-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 16px;
+        }
+        .catalog-title {
+          font-family: "Fraunces", "Times New Roman", serif;
+          font-size: clamp(28px, 4vw, 38px);
+          margin: 0;
+          color: #1c1916;
+        }
+        .catalog-subtitle {
+          color: #6f655c;
+          margin: 0;
+        }
+        .catalog-card {
+          background: rgba(255, 255, 255, 0.9);
+          border-radius: 16px;
+          padding: 16px;
+          box-shadow: 0 14px 32px rgba(25, 15, 10, 0.12);
+          border: 1px solid rgba(255, 176, 136, 0.2);
+        }
+        .catalog-filter {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+        .catalog-select {
+          padding: 10px 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(28,25,22,0.12);
+          min-width: 220px;
+          background: #fff;
+        }
+        .catalog-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+          gap: 16px;
+        }
+      `}</style>
 
-      {/* Filtre par marque */}
-      <div style={styles.filterContainer}>
-        <label>Marque : </label>
-        <select
-          value={selectedBrand}
-          onChange={(e) => setSelectedBrand(e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Toutes les marques</option>
-          {brands.map((brand) => (
-            <option key={brand} value={brand}>
-              {brand}
-            </option>
+      <div className="catalog-wrap">
+        <div className="catalog-header">
+          <div>
+            <h1 className="catalog-title">Catalogue de Parfums</h1>
+            <p className="catalog-subtitle">
+              Explore des references fines avec un style harmonisé à l’espace admin.
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+            <span style={styles.badge}>{filteredPerfumes.length} parfum(s) trouvé(s)</span>
+            <Link to="/cart" style={styles.cartBtn}>
+              Voir mon panier
+            </Link>
+          </div>
+        </div>
+
+        <div className="catalog-card" style={{ marginBottom: 18 }}>
+          <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+          <div className="catalog-filter">
+            <label>Marque :</label>
+            <select
+              value={selectedBrand}
+              onChange={(e) => setSelectedBrand(e.target.value)}
+              className="catalog-select"
+            >
+              <option value="">Toutes les marques</option>
+              {brands.map((brand) => (
+                <option key={brand} value={brand}>
+                  {brand}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="catalog-grid">
+          {filteredPerfumes.map((perfume) => (
+            <PerfumeCard key={perfume.id} perfume={perfume} variant="soft" />
           ))}
-        </select>
+        </div>
+
+        {filteredPerfumes.length === 0 && (
+          <p style={styles.noResults}>Aucun parfum trouvé</p>
+        )}
       </div>
-
-      <p style={styles.count}>
-        {filteredPerfumes.length} parfum(s) trouvé(s)
-      </p>
-
-      <div style={styles.grid}>
-        {filteredPerfumes.map((perfume) => (
-          <PerfumeCard key={perfume.id} perfume={perfume} />
-        ))}
-      </div>
-
-      {filteredPerfumes.length === 0 && (
-        <p style={styles.noResults}>Aucun parfum trouvé</p>
-      )}
     </div>
   );
 };
 
 const styles = {
-  container: { padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' },
+  page: {
+    minHeight: '100vh',
+    padding: '40px 20px 80px',
+    background:
+      'radial-gradient(circle at 12% 15%, rgba(255, 177, 136, 0.35), transparent 48%),' +
+      'radial-gradient(circle at 88% 18%, rgba(255, 107, 107, 0.18), transparent 52%),' +
+      'radial-gradient(circle at 50% 80%, rgba(255, 215, 194, 0.6), transparent 55%),' +
+      '#fffaf6',
+  },
   loading: { textAlign: 'center', fontSize: '20px', padding: '100px' },
   error: { textAlign: 'center', color: 'red', fontSize: '18px' },
-  filterContainer: { margin: '20px 0' },
-  select: { padding: '8px', fontSize: '16px', marginLeft: '10px' },
-  count: { color: '#666', marginBottom: '20px' },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-    gap: '20px',
+  badge: {
+    padding: '8px 14px',
+    borderRadius: '999px',
+    background: 'rgba(255, 107, 107, 0.12)',
+    color: '#b33a2b',
+    fontWeight: 700,
+    fontSize: '13px',
   },
-  noResults: { textAlign: 'center', fontSize: '18px', color: '#999', marginTop: '40px' },
+  cartBtn: {
+    padding: '10px 14px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,107,107,0.35)',
+    background: '#fff',
+    color: '#b33a2b',
+    fontWeight: 700,
+    textDecoration: 'none',
+  },
+  noResults: { textAlign: 'center', fontSize: '18px', color: '#999', marginTop: '20px' },
 };
 
 export default ProductsPage;

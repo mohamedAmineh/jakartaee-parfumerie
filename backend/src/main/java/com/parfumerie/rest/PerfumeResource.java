@@ -42,14 +42,15 @@ public class PerfumeResource {
     public Response update(@PathParam("id") Long id, Perfume perfume) {
         Perfume existing = em.find(Perfume.class, id);
         if (existing == null) return Response.status(Response.Status.NOT_FOUND).build();
-        
-        existing.setName(perfume.getName());
-        existing.setBrand(perfume.getBrand());
-        existing.setPrice(perfume.getPrice());
-        existing.setStock(perfume.getStock());
-        existing.setAvailable(perfume.getAvailable());
-        existing.setFormat(perfume.getFormat());
-        
+
+        // Mise a jour partielle pour eviter d'ecraser avec des null
+        if (perfume.getName() != null) existing.setName(perfume.getName());
+        if (perfume.getBrand() != null) existing.setBrand(perfume.getBrand());
+        if (perfume.getPrice() != null) existing.setPrice(perfume.getPrice());
+        if (perfume.getStock() != null) existing.setStock(perfume.getStock());
+        if (perfume.getAvailable() != null) existing.setAvailable(perfume.getAvailable());
+        if (perfume.getFormat() != null) existing.setFormat(perfume.getFormat());
+
         em.merge(existing);
         return Response.ok(existing).build();
     }

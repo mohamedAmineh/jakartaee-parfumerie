@@ -57,13 +57,19 @@ public class UserService {
         if (email == null || email.isBlank()) return null;
         TypedQuery<User> q = em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class);
         q.setParameter("email", email);
-        return q.getResultStream().findFirst().orElse(null);
+        User u = q.getResultStream().findFirst().orElse(null);
+        if (u != null) {
+            // Reload from DB in case the row was updated outside JPA (eg. manual SQL update).
+            em.refresh(u);
+        }
+        return u;
     }
 
     public User authenticate(String email, String plainPassword) {
         email = normalizeEmail(email);
         User u = findByEmail(email);
         if (u == null) return null;
+        if (u.getPassword() == null || u.getPassword().isBlank()) return null;
         if (!BCrypt.checkpw(plainPassword, u.getPassword())) return null;
         return u;
     }

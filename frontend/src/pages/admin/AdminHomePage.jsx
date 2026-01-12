@@ -1,6 +1,68 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function AdminHomePage() {
+  const navigate = useNavigate();
+  const [stockStatus, setStockStatus] = useState({
+    loading: false,
+    error: null,
+    summary: null,
+  });
+  const [orderNotifs, setOrderNotifs] = useState({
+    loading: false,
+    error: null,
+    items: [],
+  });
+
+  async function handleCheckStock() {
+    setStockStatus({ loading: true, error: null, summary: null });
+    try {
+      const res = await fetch("http://localhost:8080/starter/api/perfumes");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      const perfumes = await res.json();
+      const total = perfumes.length;
+      const lowStock = perfumes.filter((p) => Number(p.stock || 0) <= 5);
+      const lowest = perfumes.reduce(
+        (min, p) => (Number(p.stock || 0) < min ? Number(p.stock || 0) : min),
+        Infinity
+      );
+      const summary =
+        total === 0
+          ? "Aucun parfum en catalogue pour le moment."
+          : lowStock.length === 0
+            ? "Tous les stocks sont au-dessus de 5."
+            : `${lowStock.length} reference(s) a surveiller (stock <= 5). Stock le plus bas: ${
+                lowest === Infinity ? 0 : lowest
+              }.`;
+      setStockStatus({ loading: false, error: null, summary });
+    } catch (err) {
+      setStockStatus({ loading: false, error: err.message, summary: null });
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("user");
+    navigate("/auth", { replace: true });
+  }
+
+  async function handleFetchNotifications() {
+    setOrderNotifs((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const res = await fetch("http://localhost:8080/starter/api/notifications/orders");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setOrderNotifs({ loading: false, error: null, items: data || [] });
+    } catch (err) {
+      setOrderNotifs({ loading: false, error: err.message, items: [] });
+    }
+  }
+
   return (
     <div className="admin-home">
       <style>{`
@@ -99,6 +161,36 @@ export default function AdminHomePage() {
           font-weight: 600;
           font-size: 13px;
         }
+        .admin-home__pill-button {
+          padding: 10px 16px;
+          border-radius: 999px;
+          border: none;
+          background: linear-gradient(120deg, #ff6b6b, #ffb088);
+          color: #1c1916;
+          font-weight: 700;
+          font-size: 14px;
+          box-shadow: 0 12px 24px rgba(255, 107, 107, 0.25);
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .admin-home__pill-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 14px 28px rgba(255, 107, 107, 0.3);
+        }
+        .admin-home__pill-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        .admin-home__pill-button--ghost {
+          background: rgba(255, 255, 255, 0.88);
+          color: #b33a2b;
+          border: 1px solid rgba(255, 107, 107, 0.4);
+          box-shadow: none;
+        }
+        .admin-home__pill-button--ghost:hover {
+          box-shadow: 0 10px 18px rgba(255, 107, 107, 0.18);
+        }
 
         .admin-home__grid {
           display: grid;
@@ -185,7 +277,34 @@ export default function AdminHomePage() {
               Gere le catalogue et prepare les prochaines references en quelques clics.
             </p>
           </div>
-          <span className="admin-home__chip">Acces admin actif</span>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <span className="admin-home__chip">Acces admin actif</span>
+            <button
+              className="admin-home__pill-button"
+              onClick={handleCheckStock}
+              disabled={stockStatus.loading}
+              type="button"
+            >
+              {stockStatus.loading ? "Scan en cours..." : "Checker le stock"}
+            </button>
+            <button
+              className="admin-home__pill-button admin-home__pill-button--ghost"
+              onClick={handleLogout}
+              type="button"
+            >
+              Se deconnecter
+            </button>
+            <button
+              className="admin-home__pill-button admin-home__pill-button--ghost"
+              onClick={handleFetchNotifications}
+              disabled={orderNotifs.loading}
+              type="button"
+            >
+              {orderNotifs.loading
+                ? "Chargement..."
+                : `Notifs commandes (${orderNotifs.items.length})`}
+            </button>
+          </div>
         </header>
 
         <section className="admin-home__grid">
@@ -197,16 +316,20 @@ export default function AdminHomePage() {
             <span className="admin-home__cta">Lancer la creation -&gt;</span>
           </Link>
 
-          <div className="admin-home__card">
+          <Link
+            to="/admin/perfumes/manage"
+            className="admin-home__card"
+            style={{ textDecoration: "none" }}
+          >
             <div className="admin-home__stack">
               <h2 className="admin-home__card-title">Etat du catalogue</h2>
-              <p className="admin-home__highlight">Prise en main rapide</p>
+              <p className="admin-home__highlight">Actions rapides</p>
               <p className="admin-home__card-text">
-                Utilise le bouton principal pour ajouter un parfum. Les mises a jour seront visibles
-                sur la vitrine client.
+                Consulter le stock, activer/desactiver la dispo, dupliquer ou supprimer une reference.
               </p>
+              <span className="admin-home__cta">Ouvrir la gestion -&gt;</span>
             </div>
-          </div>
+          </Link>
 
           <div className="admin-home__card">
             <h2 className="admin-home__card-title">Checklist admin</h2>
@@ -214,6 +337,58 @@ export default function AdminHomePage() {
               Verifie les stocks, assure-toi que les descriptions sont claires, puis active la
               disponibilite seulement si le produit est pret.
             </p>
+            {stockStatus.summary && (
+              <p className="admin-home__card-text" style={{ fontWeight: 700 }}>
+                {stockStatus.summary}
+              </p>
+            )}
+            {stockStatus.error && (
+              <p className="admin-home__card-text" style={{ color: "#b33a2b", fontWeight: 700 }}>
+                Erreur: {stockStatus.error}
+              </p>
+            )}
+          </div>
+
+          <div className="admin-home__card">
+            <h2 className="admin-home__card-title">Alertes commandes</h2>
+            <p className="admin-home__card-text">
+              Dernieres commandes recues. Clique sur “Notifs commandes” pour rafraichir.
+            </p>
+            {orderNotifs.error && (
+              <p className="admin-home__card-text" style={{ color: "#b33a2b", fontWeight: 700 }}>
+                Erreur: {orderNotifs.error}
+              </p>
+            )}
+            {orderNotifs.items.slice(0, 5).map((n) => (
+              <div
+                key={n.orderId + String(n.createdAt)}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255,107,107,0.15)",
+                  background: "rgba(255,255,255,0.75)",
+                  marginTop: "8px",
+                  display: "grid",
+                  gap: "4px",
+                }}
+              >
+                <strong>Commande #{n.orderId}</strong>
+                <span style={{ color: "#6f655c" }}>
+                  {n.customerEmail || "Client inconnu"} • {n.status || "N/A"}
+                </span>
+                <span style={{ color: "#1c1916", fontWeight: 700 }}>
+                  Total: {n.total ?? "-"} {n.total ? "€" : ""}
+                </span>
+                {n.createdAt && (
+                  <span style={{ color: "#9a8f85", fontSize: "12px" }}>
+                    Recu: {n.createdAt}
+                  </span>
+                )}
+              </div>
+            ))}
+            {orderNotifs.items.length === 0 && !orderNotifs.loading && !orderNotifs.error && (
+              <p className="admin-home__card-text">Aucune notification pour le moment.</p>
+            )}
           </div>
         </section>
       </div>

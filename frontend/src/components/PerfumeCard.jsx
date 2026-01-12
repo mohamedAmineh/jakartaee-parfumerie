@@ -1,16 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const PerfumeCard = ({ perfume }) => {
+const PerfumeCard = ({ perfume, variant = "default" }) => {
+  const isSoft = variant === "soft";
   return (
-    <div style={styles.card}>
-      <h3 style={styles.name}>{perfume.name}</h3>
-      <p style={styles.brand}>{perfume.brand}</p>
-      <p style={styles.price}>{perfume.price}€</p>
-      <p style={styles.stock}>
+    <div style={isSoft ? stylesSoft.card : styles.card}>
+      <h3 style={isSoft ? stylesSoft.name : styles.name}>{perfume.name}</h3>
+      <p style={isSoft ? stylesSoft.brand : styles.brand}>{perfume.brand}</p>
+      <p style={isSoft ? stylesSoft.price : styles.price}>{perfume.price}€</p>
+      <p style={isSoft ? stylesSoft.stock : styles.stock}>
         {perfume.available ? `Stock: ${perfume.stock}` : 'Rupture de stock'}
       </p>
-      <Link to={`/product/${perfume.id}`} style={styles.link}>
+      <Link to={`/product/${perfume.id}`} style={isSoft ? stylesSoft.link : styles.link}>
         Voir détails →
       </Link>
     </div>
@@ -39,6 +40,33 @@ const styles = {
     color: '#fff',
     textDecoration: 'none',
     borderRadius: '6px',
+  },
+};
+
+const stylesSoft = {
+  card: {
+    border: '1px solid rgba(255, 176, 136, 0.2)',
+    borderRadius: '16px',
+    padding: '18px',
+    textAlign: 'center',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    boxShadow: '0 14px 32px rgba(25,15,10,0.12)',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+  },
+  name: { fontSize: '20px', fontWeight: '700', margin: '8px 0', color: '#1c1916' },
+  brand: { color: '#6f655c', fontSize: '14px' },
+  price: { fontSize: '22px', color: '#1c1916', fontWeight: '700', margin: '8px 0' },
+  stock: { fontSize: '13px', color: '#6f655c' },
+  link: {
+    display: 'inline-block',
+    marginTop: '10px',
+    padding: '10px 18px',
+    background: 'linear-gradient(120deg, #ff6b6b, #ffb088)',
+    color: '#1c1916',
+    textDecoration: 'none',
+    borderRadius: '12px',
+    fontWeight: '700',
+    boxShadow: '0 12px 22px rgba(255,107,107,0.2)',
   },
 };
 
