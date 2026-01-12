@@ -277,44 +277,9 @@ export default function AdminHomePage() {
               Gere le catalogue et prepare les prochaines references en quelques clics.
             </p>
           </div>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            <span className="admin-home__chip">Acces admin actif</span>
-            <button
-              className="admin-home__pill-button"
-              onClick={handleCheckStock}
-              disabled={stockStatus.loading}
-              type="button"
-            >
-              {stockStatus.loading ? "Scan en cours..." : "Checker le stock"}
-            </button>
-            <button
-              className="admin-home__pill-button admin-home__pill-button--ghost"
-              onClick={handleLogout}
-              type="button"
-            >
-              Se deconnecter
-            </button>
-            <button
-              className="admin-home__pill-button admin-home__pill-button--ghost"
-              onClick={handleFetchNotifications}
-              disabled={orderNotifs.loading}
-              type="button"
-            >
-              {orderNotifs.loading
-                ? "Chargement..."
-                : `Notifs commandes (${orderNotifs.items.length})`}
-            </button>
-          </div>
         </header>
 
         <section className="admin-home__grid">
-          <Link to="/admin/perfumes/new" className="admin-home__card admin-home__card--primary">
-            <h2 className="admin-home__card-title">Creer un nouveau parfum</h2>
-            <p className="admin-home__card-text">
-              Ajoute une reference premium, complete le format, le prix et les notes pour la fiche produit.
-            </p>
-            <span className="admin-home__cta">Lancer la creation -&gt;</span>
-          </Link>
 
           <Link
             to="/admin/perfumes/manage"
@@ -323,7 +288,7 @@ export default function AdminHomePage() {
           >
             <div className="admin-home__stack">
               <h2 className="admin-home__card-title">Etat du catalogue</h2>
-              <p className="admin-home__highlight">Actions rapides</p>
+              <p className="admin-home__highlight">Consulter les stocks</p>
               <p className="admin-home__card-text">
                 Consulter le stock, activer/desactiver la dispo, dupliquer ou supprimer une reference.
               </p>
@@ -331,65 +296,21 @@ export default function AdminHomePage() {
             </div>
           </Link>
 
-          <div className="admin-home__card">
-            <h2 className="admin-home__card-title">Checklist admin</h2>
-            <p className="admin-home__card-text">
-              Verifie les stocks, assure-toi que les descriptions sont claires, puis active la
-              disponibilite seulement si le produit est pret.
-            </p>
-            {stockStatus.summary && (
-              <p className="admin-home__card-text" style={{ fontWeight: 700 }}>
-                {stockStatus.summary}
+          <Link
+            to="/admin/orders"
+            className="admin-home__card"
+            style={{ textDecoration: "none" }}
+          >
+            <div className="admin-home__stack">
+              <h2 className="admin-home__card-title">Etat des commandes</h2>
+              <p className="admin-home__highlight">Consulter les commandes.</p>
+              <p className="admin-home__card-text">
+                Consulter/ Modifier/ Supprimer les commandes.
               </p>
-            )}
-            {stockStatus.error && (
-              <p className="admin-home__card-text" style={{ color: "#b33a2b", fontWeight: 700 }}>
-                Erreur: {stockStatus.error}
-              </p>
-            )}
-          </div>
+              <span className="admin-home__cta">Ouvrir la gestion -&gt;</span>
+            </div>
+          </Link>
 
-          <div className="admin-home__card">
-            <h2 className="admin-home__card-title">Alertes commandes</h2>
-            <p className="admin-home__card-text">
-              Dernieres commandes recues. Clique sur “Notifs commandes” pour rafraichir.
-            </p>
-            {orderNotifs.error && (
-              <p className="admin-home__card-text" style={{ color: "#b33a2b", fontWeight: 700 }}>
-                Erreur: {orderNotifs.error}
-              </p>
-            )}
-            {orderNotifs.items.slice(0, 5).map((n) => (
-              <div
-                key={n.orderId + String(n.createdAt)}
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: "12px",
-                  border: "1px solid rgba(255,107,107,0.15)",
-                  background: "rgba(255,255,255,0.75)",
-                  marginTop: "8px",
-                  display: "grid",
-                  gap: "4px",
-                }}
-              >
-                <strong>Commande #{n.orderId}</strong>
-                <span style={{ color: "#6f655c" }}>
-                  {n.customerEmail || "Client inconnu"} • {n.status || "N/A"}
-                </span>
-                <span style={{ color: "#1c1916", fontWeight: 700 }}>
-                  Total: {n.total ?? "-"} {n.total ? "€" : ""}
-                </span>
-                {n.createdAt && (
-                  <span style={{ color: "#9a8f85", fontSize: "12px" }}>
-                    Recu: {n.createdAt}
-                  </span>
-                )}
-              </div>
-            ))}
-            {orderNotifs.items.length === 0 && !orderNotifs.loading && !orderNotifs.error && (
-              <p className="admin-home__card-text">Aucune notification pour le moment.</p>
-            )}
-          </div>
         </section>
       </div>
     </div>

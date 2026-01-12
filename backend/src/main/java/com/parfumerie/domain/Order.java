@@ -26,7 +26,7 @@ public class Order {
 
     // FK vers User
     @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id", nullable = true)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     private LocalDateTime orderDate;

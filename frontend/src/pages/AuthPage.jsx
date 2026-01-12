@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const LOGIN_URL = "http://localhost:8080/starter/api/auth/login";
 const SIGNUP_URL = "http://localhost:8080/starter/api/users";
+
 const getRoleValue = (role) => {
   if (!role) return "";
   if (typeof role === "string") return role;
@@ -12,17 +13,22 @@ const getRoleValue = (role) => {
   }
   return String(role);
 };
+
 const isAdminUser = (user) => getRoleValue(user?.role).toUpperCase() === "ADMIN";
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("login");
-  const [currentUser, setCurrentUser] = useState(() => {
-    return JSON.parse(localStorage.getItem("user") || "null");
-  });
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
+
+  const [mode, setMode] = useState("login"); // login | signup
+  const [currentUser, setCurrentUser] = useState(() =>
+    JSON.parse(localStorage.getItem("user") || "null")
+  );
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -35,13 +41,18 @@ export default function AuthPage() {
 
   const isLogin = mode === "login";
 
+  // clé d'animation: change à chaque switch login/signup
+  const [animKey, setAnimKey] = useState(0);
+
   useEffect(() => {
     setError(null);
     setSuccess(null);
+    setAnimKey((k) => k + 1);
   }, [mode]);
 
   function handleLogout() {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setCurrentUser(null);
     setSuccess(null);
     setMode("login");
@@ -63,13 +74,19 @@ export default function AuthPage() {
     localStorage.setItem("user", JSON.stringify(user));
     setCurrentUser(user);
 
-    if (isAdminUser(user)) navigate("/admin", { replace: true });
-    else setSuccess(`Connecte en tant que ${user.email}.`);
+    if (isAdminUser(user)) {
+      navigate("/admin", { replace: true });
+      return;
+    }
+
+    setSuccess(`Connecté en tant que ${user.email}.`);
+    navigate(from, { replace: true });
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     setLoading(true);
 
     try {
@@ -101,230 +118,380 @@ export default function AuthPage() {
       }
 
       await loginUser(email, password);
-      if (!isLogin) setMode("login");
+      setMode("login");
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "Erreur.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={styles.container}>
-      {currentUser && !isAdminUser(currentUser) && (
-        <div style={styles.info}>
-          <p style={styles.infoText}>
-            Vous etes deja connecte en tant que {currentUser.email}.
-          </p>
-          <div style={styles.infoActions}>
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              style={styles.infoButton}
-            >
-              Aller a l'accueil
-            </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              style={styles.infoButtonOutline}
-            >
-              Se deconnecter
-            </button>
+    <div style={styles.page}>
+      <style>{css}</style>
+
+      {/* centre vertical/horizontal */}
+      <div style={styles.center}>
+        <div style={styles.shell}>
+          <div style={styles.hero}>
+            <h1 style={styles.title}>Compte</h1>
+            <p style={styles.subtitle}>
+              Connecte-toi pour commander, ou crée un compte client.
+            </p>
           </div>
+
+          {currentUser ? (
+            <div style={styles.card} className="auth-anim">
+              <div style={styles.cardHeader}>
+                <h2 style={styles.h2}>Déjà connecté</h2>
+                <span style={styles.badge}>
+                  {String(getRoleValue(currentUser.role) || "CLIENT").toUpperCase()}
+                </span>
+              </div>
+
+              <p style={styles.pText}>
+                Vous êtes déjà connecté en tant que <b>{currentUser.email}</b>.
+              </p>
+
+              <div style={styles.row}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(isAdminUser(currentUser) ? "/admin" : "/", {
+                      replace: true,
+                    })
+                  }
+                  style={{ ...styles.btn, ...styles.btnPrimary }}
+                >
+                  Continuer
+                </button>
+
+                <button type="button" onClick={handleLogout} style={styles.btn}>
+                  Déconnexion
+                </button>
+              </div>
+
+              <div style={styles.note}>
+                Les comptes créés ici sont des comptes client.
+              </div>
+            </div>
+          ) : (
+            <div style={styles.card}>
+              <div style={styles.tabs}>
+                <button
+                  type="button"
+                  onClick={() => setMode("login")}
+                  style={{
+                    ...styles.tab,
+                    ...(isLogin ? styles.tabActive : {}),
+                  }}
+                >
+                  Connexion
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("signup")}
+                  style={{
+                    ...styles.tab,
+                    ...(!isLogin ? styles.tabActive : {}),
+                  }}
+                >
+                  Inscription
+                </button>
+              </div>
+
+              {/* petite animation quand on change de mode */}
+              <div key={animKey} className="auth-anim">
+                {success && <div style={styles.success}>{success}</div>}
+                {error && <div style={styles.error}>Erreur: {error}</div>}
+
+                <form onSubmit={handleSubmit} style={styles.form}>
+                  {!isLogin && (
+                    <>
+                      <div style={styles.grid2}>
+                        <div>
+                          <label style={styles.label}>Prénom</label>
+                          <input
+                            style={styles.input}
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            placeholder="Ex: Sarah"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label style={styles.label}>Nom</label>
+                          <input
+                            style={styles.input}
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            placeholder="Ex: Martin"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div style={styles.grid2}>
+                        <div>
+                          <label style={styles.label}>Téléphone</label>
+                          <input
+                            style={styles.input}
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="06xxxxxxxx"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label style={styles.label}>Adresse</label>
+                          <input
+                            style={styles.input}
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            placeholder="Adresse de livraison"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div style={styles.field}>
+                    <label style={styles.label}>Email</label>
+                    <input
+                      style={styles.input}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      type="email"
+                      placeholder="email@exemple.com"
+                      required
+                    />
+                  </div>
+
+                  <div style={styles.field}>
+                    <label style={styles.label}>Mot de passe</label>
+                    <input
+                      style={styles.input}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      type="password"
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
+
+                  {!isLogin && (
+                    <div style={styles.field}>
+                      <label style={styles.label}>Confirmer le mot de passe</label>
+                      <input
+                        style={styles.input}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        type="password"
+                        placeholder="••••••••"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      ...styles.btn,
+                      ...styles.btnPrimary,
+                      ...(loading ? styles.btnDisabled : {}),
+                    }}
+                  >
+                    {loading
+                      ? "Veuillez patienter..."
+                      : isLogin
+                        ? "Se connecter"
+                        : "Créer un compte"}
+                  </button>
+
+                  {!isLogin && (
+                    <div style={styles.note}>
+                      Les comptes créés ici sont des comptes client.
+                    </div>
+                  )}
+                </form>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      <div style={styles.tabRow}>
-        <button
-          type="button"
-          onClick={() => setMode("login")}
-          style={isLogin ? { ...styles.tab, ...styles.tabActive } : styles.tab}
-          disabled={loading}
-        >
-          Se connecter
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("signup")}
-          style={!isLogin ? { ...styles.tab, ...styles.tabActive } : styles.tab}
-          disabled={loading}
-        >
-          Creer un compte
-        </button>
       </div>
-
-      <h2 style={styles.title}>{isLogin ? "Login" : "Creer un compte client"}</h2>
-
-      <form onSubmit={handleSubmit} style={styles.form}>
-        {!isLogin && (
-          <>
-            <label style={styles.field}>
-              Prenom
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
-                autoComplete="given-name"
-              />
-            </label>
-
-            <label style={styles.field}>
-              Nom
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-                autoComplete="family-name"
-              />
-            </label>
-          </>
-        )}
-
-        <label style={styles.field}>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-          />
-        </label>
-
-        {!isLogin && (
-          <>
-            <label style={styles.field}>
-              Telephone
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                autoComplete="tel"
-                inputMode="numeric"
-                maxLength={10}
-                pattern="^0[0-9]{9}$"
-                title="Le numero doit contenir 10 chiffres et commencer par 0"
-              />
-            </label>
-
-            <label style={styles.field}>
-              Adresse
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                autoComplete="street-address"
-              />
-            </label>
-          </>
-        )}
-
-        <label style={styles.field}>
-          Mot de passe
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete={isLogin ? "current-password" : "new-password"}
-          />
-        </label>
-
-        {!isLogin && (
-          <label style={styles.field}>
-            Confirmer le mot de passe
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
-          </label>
-        )}
-
-        <button type="submit" disabled={loading} style={styles.submit}>
-          {loading
-            ? isLogin
-              ? "Connexion..."
-              : "Creation..."
-            : isLogin
-              ? "Se connecter"
-              : "Creer mon compte"}
-        </button>
-      </form>
-
-      {!isLogin && (
-        <p style={styles.note}>Les comptes crees ici sont des comptes client.</p>
-      )}
-
-      {success && <p style={styles.success}>{success}</p>}
-      {error && <p style={styles.error}>{error}</p>}
     </div>
   );
 }
 
+const css = `
+/* animation simple: fade + slide */
+@keyframes authFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.auth-anim {
+  animation: authFadeUp 240ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-anim { animation: none; }
+}
+`;
+
 const styles = {
-  container: { maxWidth: 520, margin: "40px auto", padding: "20px" },
-  info: {
-    border: "1px solid #ffd5d5",
-    background: "#fff4f4",
-    padding: "12px 14px",
-    borderRadius: "10px",
-    marginBottom: "16px",
+  page: {
+    minHeight: "calc(100vh - 70px)",
+    padding: "28px 18px 60px",
+    background:
+      "radial-gradient(circle at 12% 15%, rgba(255, 177, 136, 0.20), transparent 48%), radial-gradient(circle at 88% 18%, rgba(255, 107, 107, 0.14), transparent 52%), #fffaf6",
   },
-  infoText: { marginBottom: "8px", color: "#333" },
-  infoActions: { display: "flex", gap: "10px", flexWrap: "wrap" },
-  infoButton: {
-    padding: "8px 12px",
-    borderRadius: "6px",
-    border: "none",
-    background: "#ff6b6b",
-    color: "#fff",
-    fontWeight: "bold",
-    cursor: "pointer",
+
+  // NOUVEAU: centrage
+  center: {
+    minHeight: "calc(100vh - 70px - 28px - 60px)", // essaye de compenser le padding page
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  infoButtonOutline: {
-    padding: "8px 12px",
-    borderRadius: "6px",
-    border: "1px solid #ff6b6b",
-    background: "#fff",
-    color: "#ff6b6b",
-    fontWeight: "bold",
-    cursor: "pointer",
+
+  // rendu plus "card auth" : moins large, plus centré
+  shell: { width: "100%", maxWidth: 520, margin: "0 auto" },
+
+  hero: { marginBottom: 14, textAlign: "center" },
+  title: {
+    margin: 0,
+    fontFamily: "Fraunces, Times New Roman, serif",
+    fontWeight: 700,
+    fontSize: 34,
+    color: "#1c1916",
   },
-  tabRow: { display: "flex", gap: "10px", marginBottom: "16px" },
+  subtitle: { margin: "6px 0 0", color: "#6f655c", fontWeight: 700 },
+
+  card: {
+    background: "rgba(255,255,255,0.9)",
+    border: "1px solid rgba(28,25,22,0.08)",
+    borderRadius: 18,
+    padding: 16,
+    boxShadow: "0 12px 26px rgba(25, 15, 10, 0.06)",
+  },
+
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 10,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  h2: { margin: 0, fontSize: 18, fontWeight: 900, color: "#1c1916" },
+  pText: { margin: "10px 0 0", color: "#1c1916", fontWeight: 700 },
+
+  tabs: {
+    display: "inline-flex",
+    borderRadius: 999,
+    padding: 4,
+    background: "rgba(28,25,22,0.06)",
+    border: "1px solid rgba(28,25,22,0.08)",
+    gap: 4,
+    marginBottom: 12,
+    justifyContent: "center",
+    width: "100%",
+  },
   tab: {
     flex: 1,
-    padding: "10px 12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    background: "#fafafa",
+    border: 0,
+    background: "transparent",
     cursor: "pointer",
+    padding: "10px 14px",
+    borderRadius: 999,
+    fontFamily: "Manrope, system-ui, -apple-system, Segoe UI, Roboto, Arial",
+    fontWeight: 900,
+    fontSize: 13,
+    color: "#6f655c",
   },
   tabActive: {
-    background: "#ff6b6b",
-    borderColor: "#ff6b6b",
-    color: "#fff",
-    fontWeight: "bold",
+    background: "rgba(255,255,255,0.85)",
+    border: "1px solid rgba(28,25,22,0.08)",
+    color: "#1c1916",
   },
-  title: { marginBottom: "12px" },
-  form: { display: "flex", flexDirection: "column", gap: "12px" },
-  field: { display: "flex", flexDirection: "column", gap: "6px" },
-  submit: {
-    padding: "10px 12px",
-    borderRadius: "8px",
-    border: "none",
-    background: "#ff6b6b",
-    color: "#fff",
-    fontWeight: "bold",
+
+  form: { display: "grid", gap: 12, marginTop: 6 },
+  grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
+  field: { display: "grid", gap: 6 },
+
+  label: { fontWeight: 900, color: "#1c1916", fontSize: 13 },
+  input: {
+    width: "100%",
+    padding: "11px 12px",
+    borderRadius: 12,
+    border: "1px solid rgba(28,25,22,0.12)",
+    background: "rgba(255,255,255,0.85)",
+    outline: "none",
+    fontWeight: 700,
+    color: "#1c1916",
+  },
+
+  row: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 },
+
+  btn: {
+    padding: "10px 14px",
+    borderRadius: 12,
+    border: "1px solid rgba(28,25,22,0.10)",
+    background: "rgba(255,255,255,0.85)",
+    fontWeight: 900,
     cursor: "pointer",
+    width: "100%",
   },
-  note: { marginTop: "8px", color: "#666", fontSize: "13px" },
-  success: { color: "#1b7f3a", marginTop: "8px" },
-  error: { color: "crimson", marginTop: "8px" },
+  btnPrimary: {
+    border: "1px solid rgba(255,107,107,0.40)",
+    background:
+      "linear-gradient(135deg, rgba(255, 107, 107, 0.22), rgba(255, 177, 136, 0.22))",
+    color: "#b33a2b",
+  },
+  btnDisabled: { opacity: 0.65, cursor: "not-allowed" },
+
+  success: {
+    padding: 12,
+    borderRadius: 14,
+    border: "1px solid rgba(34, 197, 94, 0.25)",
+    background: "rgba(34, 197, 94, 0.10)",
+    color: "#166534",
+    fontWeight: 800,
+    marginBottom: 10,
+  },
+  error: {
+    padding: 12,
+    borderRadius: 14,
+    border: "1px solid rgba(255,107,107,0.25)",
+    background: "rgba(255,107,107,0.12)",
+    color: "#b33a2b",
+    fontWeight: 800,
+    marginBottom: 10,
+  },
+
+  note: {
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 14,
+    border: "1px solid rgba(28,25,22,0.08)",
+    background: "rgba(28,25,22,0.04)",
+    color: "#6f655c",
+    fontWeight: 800,
+    fontSize: 13,
+  },
+
+  badge: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid rgba(255,107,107,0.30)",
+    background: "rgba(255,107,107,0.10)",
+    color: "#b33a2b",
+    fontWeight: 900,
+    fontSize: 12,
+    letterSpacing: 0.2,
+  },
 };

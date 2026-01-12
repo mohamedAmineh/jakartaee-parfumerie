@@ -87,7 +87,7 @@ export default function CartPage() {
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600&display=swap');
       `}</style>
       <div style={styles.wrap}>
-        <Link to="/products" style={styles.back}>← Retour au catalogue</Link>
+        <Link to="/" style={styles.back}>← Retour au catalogue</Link>
         <h1 style={styles.title}>Mon panier</h1>
         <p style={styles.subtitle}>Confirme ta commande; l’admin verra la notification.</p>
 

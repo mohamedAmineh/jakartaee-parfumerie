@@ -5,12 +5,14 @@ import com.parfumerie.domain.OrderItem;
 import com.parfumerie.domain.Perfume;
 import com.parfumerie.domain.User;
 import com.parfumerie.service.NotificationService;
+import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,12 +28,13 @@ public class OrderResource {
     @PersistenceContext(unitName = "parfumeriePU")
     private EntityManager em;
 
-    @jakarta.inject.Inject
+    @Inject
     private NotificationService notificationService;
 
     public static class OrderItemDto {
         public Long perfumeId;
         public Integer quantity;
+        // unitPrice ignoré côté serveur (on prend le prix DB)
         public BigDecimal unitPrice;
     }
 
@@ -56,15 +59,16 @@ public class OrderResource {
 
     @POST
     public Response create(CreateOrderRequest req) {
-        User user = em.find(User.class, req.userId);
-        if (user == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("User not found").build();
+        if (req == null || req.userId == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("userId is required").build();
+        }
+        if (req.items == null || req.items.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Order must have at least one item").build();
         }
 
-        if (req.items == null || req.items.isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Order must have at least one item").build();
+        User user = em.find(User.class, req.userId);
+        if (user == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("User not found").build();
         }
 
         Order order = new Order();
@@ -76,34 +80,63 @@ public class OrderResource {
         BigDecimal total = BigDecimal.ZERO;
 
         for (OrderItemDto itemDto : req.items) {
+            if (itemDto == null || itemDto.perfumeId == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("perfumeId is required").build();
+            }
+
+            int qty = itemDto.quantity == null ? 0 : itemDto.quantity;
+            if (qty <= 0) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Quantity must be > 0").build();
+            }
+
             Perfume perfume = em.find(Perfume.class, itemDto.perfumeId);
             if (perfume == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("Perfume " + itemDto.perfumeId + " not found").build();
             }
 
+            if (perfume.getAvailable() != null && !perfume.getAvailable()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Perfume " + perfume.getId() + " is not available").build();
+            }
+
+            Integer stock = perfume.getStock();
+            if (stock != null) {
+                if (stock < qty) {
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity("Not enough stock for perfume " + perfume.getId()).build();
+                }
+                perfume.setStock(stock - qty);
+            }
+
+            BigDecimal unitPrice = perfume.getPrice() != null ? perfume.getPrice() : BigDecimal.ZERO;
+
             OrderItem item = new OrderItem();
             item.setOrder(order);
             item.setPerfume(perfume);
-            item.setQuantity(itemDto.quantity);
-            item.setUnitPrice(itemDto.unitPrice);
+            item.setQuantity(qty);
+            item.setUnitPrice(unitPrice);
 
             order.getItems().add(item);
-            
-            total = total.add(itemDto.unitPrice.multiply(BigDecimal.valueOf(itemDto.quantity)));
+
+            total = total.add(unitPrice.multiply(BigDecimal.valueOf(qty)));
         }
 
         order.setTotalPrice(total);
-        em.persist(order);
-        notificationService.addOrderCreated(order);
 
-        // Eviter les cycles de serialization, renvoyer un DTO minimal
+        em.persist(order);
+
+        if (notificationService != null) {
+            notificationService.addOrderCreated(order);
+        }
+
         HashMap<String, Object> result = new HashMap<>();
         result.put("id", order.getId());
         result.put("status", order.getStatus());
         result.put("total", order.getTotalPrice());
         result.put("userEmail", user.getEmail());
         result.put("createdAt", order.getOrderDate());
+
         return Response.status(Response.Status.CREATED).entity(result).build();
     }
 
@@ -112,12 +145,10 @@ public class OrderResource {
     public Response update(@PathParam("id") Long id, CreateOrderRequest req) {
         Order existing = em.find(Order.class, id);
         if (existing == null) return Response.status(Response.Status.NOT_FOUND).build();
-        
-        if (req.status != null) {
+
+        if (req != null && req.status != null) {
             existing.setStatus(req.status);
         }
-        
-        em.merge(existing);
         return Response.ok(existing).build();
     }
 
@@ -126,6 +157,7 @@ public class OrderResource {
     public Response delete(@PathParam("id") Long id) {
         Order o = em.find(Order.class, id);
         if (o == null) return Response.status(Response.Status.NOT_FOUND).build();
+
         em.remove(o);
         return Response.noContent().build();
     }

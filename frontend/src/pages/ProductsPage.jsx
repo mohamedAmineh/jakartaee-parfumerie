@@ -16,6 +16,8 @@ const ProductsPage = () => {
       .filter((p) => (selectedBrand ? p.brand === selectedBrand : true));
   }, [perfumes, searchTerm, selectedBrand]);
 
+  const isLoggedIn = !!localStorage.getItem("token"); 
+
   const brands = useMemo(() => {
     return perfumes.reduce((acc, perfume) => {
       if (!acc.includes(perfume.brand)) acc.push(perfume.brand);
@@ -89,12 +91,6 @@ const ProductsPage = () => {
             <p className="catalog-subtitle">
               Explore des references fines avec un style harmonisé à l’espace admin.
             </p>
-          </div>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
-            <span style={styles.badge}>{filteredPerfumes.length} parfum(s) trouvé(s)</span>
-            <Link to="/cart" style={styles.cartBtn}>
-              Voir mon panier
-            </Link>
           </div>
         </div>
 

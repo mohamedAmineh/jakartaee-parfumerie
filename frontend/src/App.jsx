@@ -1,33 +1,56 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from "react-router-dom";
+
+import MainLayout from "./layouts/MainLayout";
 import AdminRoute from "./routes/AdminRoute";
-import HomePage from './pages/HomePage';
-import ProductsPage from './pages/ProductsPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import AuthPage from './pages/AuthPage'
-import AdminHomePage from "./pages/admin/AdminHomePage";
-import CreatePerfumePage from "./pages/admin/CreatePerfumePage";
-import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
+import RequireAuth from "./routes/RequireAuth";
+
+import ProductsPage from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import AuthPage from "./pages/AuthPage";
 import CartPage from "./pages/CartPage";
 
+import AdminHomePage from "./pages/admin/AdminHomePage";
+import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
+import ManageOredrsPage from "./pages/admin/ManageOredrsPage";
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/product/:id" element={<ProductDetailPage />} />
-        <Route path="/cart" element={<CartPage />} />
+    <Routes>
+      {/* Tout ce qui est ici aura le NavBar via MainLayout */}
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<ProductsPage />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="product/:id" element={<ProductDetailPage />} />
 
-        <Route element={<AdminRoute />}>
-          <Route path="/admin" element={<AdminHomePage />} />
-          <Route path="/admin/perfumes/new" element={<CreatePerfumePage />} />
-          <Route path="/admin/perfumes/manage" element={<ManagePerfumesPage />} />
-        </Route>
-      </Routes>
-    </div>
+        <Route path="auth" element={<AuthPage />} />
+        <Route path="cart" element={<CartPage />} />
+
+        {/* Admin */}
+        <Route
+          path="admin"
+          element={
+            <AdminRoute>
+              <AdminHomePage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="admin/perfumes/manage"
+          element={
+            <AdminRoute>
+              <ManagePerfumesPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="admin/orders"
+          element={
+            <AdminRoute>
+              <ManageOredrsPage />
+            </AdminRoute>
+          }
+        />
+      </Route>
+    </Routes>
   );
 }
-
-export default App;

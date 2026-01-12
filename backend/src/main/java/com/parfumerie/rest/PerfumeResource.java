@@ -1,12 +1,14 @@
 package com.parfumerie.rest;
 
 import com.parfumerie.domain.Perfume;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
 import java.util.List;
 
 @Path("perfumes")
@@ -17,6 +19,32 @@ public class PerfumeResource {
 
     @PersistenceContext(unitName = "parfumeriePU")
     private EntityManager em;
+
+    private Response validateAndApplyStockRules(Perfume p) {
+        if (p == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Body is required").build();
+        }
+        if (p.getName() == null || p.getName().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("name is required").build();
+        }
+
+        Integer stock = p.getStock();
+
+        // Interdire stock négatif
+        if (stock != null && stock < 0) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("stock must be >= 0").build();
+        }
+
+        // Auto available selon stock (si stock renseigné)
+        if (stock != null) {
+            p.setAvailable(stock > 0); // stock=0 => false ; stock>0 => true
+        }
+
+        return null; // OK
+    }
 
     @GET
     public List<Perfume> getAll() {
@@ -32,31 +60,43 @@ public class PerfumeResource {
     }
 
     @POST
+    @RolesAllowed("ADMIN")
     public Response create(Perfume perfume) {
+        Response validation = validateAndApplyStockRules(perfume);
+        if (validation != null) return validation;
+
         em.persist(perfume);
         return Response.status(Response.Status.CREATED).entity(perfume).build();
     }
 
     @PUT
     @Path("{id}")
-    public Response update(@PathParam("id") Long id, Perfume perfume) {
+    @RolesAllowed("ADMIN")
+    public Response update(@PathParam("id") Long id, Perfume data) {
         Perfume existing = em.find(Perfume.class, id);
         if (existing == null) return Response.status(Response.Status.NOT_FOUND).build();
 
-        // Mise a jour partielle pour eviter d'ecraser avec des null
-        if (perfume.getName() != null) existing.setName(perfume.getName());
-        if (perfume.getBrand() != null) existing.setBrand(perfume.getBrand());
-        if (perfume.getPrice() != null) existing.setPrice(perfume.getPrice());
-        if (perfume.getStock() != null) existing.setStock(perfume.getStock());
-        if (perfume.getAvailable() != null) existing.setAvailable(perfume.getAvailable());
-        if (perfume.getFormat() != null) existing.setFormat(perfume.getFormat());
+        existing.setName(data.getName());
+        existing.setBrand(data.getBrand());
+        existing.setPrice(data.getPrice());
+        existing.setStock(data.getStock());
+        existing.setFormat(data.getFormat());
+        existing.setDescription(data.getDescription());
+        existing.setGender(data.getGender());
+        existing.setType(data.getType());
+        existing.setComment(data.getComment());
 
-        em.merge(existing);
+        // Ici on n’utilise PAS data.getAvailable() => c’est calculé depuis le stock
+        Response validation = validateAndApplyStockRules(existing);
+        if (validation != null) return validation;
+
+        // existing est managé, pas besoin de merge
         return Response.ok(existing).build();
     }
 
     @DELETE
     @Path("{id}")
+    @RolesAllowed("ADMIN")
     public Response delete(@PathParam("id") Long id) {
         Perfume p = em.find(Perfume.class, id);
         if (p == null) return Response.status(Response.Status.NOT_FOUND).build();
