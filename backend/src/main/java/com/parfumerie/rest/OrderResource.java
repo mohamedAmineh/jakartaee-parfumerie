@@ -4,7 +4,7 @@ import com.parfumerie.domain.Order;
 import com.parfumerie.domain.OrderItem;
 import com.parfumerie.domain.Perfume;
 import com.parfumerie.domain.User;
-import com.parfumerie.service.NotificationService;
+import com.parfumerie.messaging.OrderEventPublisher;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -29,7 +29,7 @@ public class OrderResource {
     private EntityManager em;
 
     @Inject
-    private NotificationService notificationService;
+    private OrderEventPublisher orderEventPublisher;
 
     public static class OrderItemDto {
         public Long perfumeId;
@@ -126,10 +126,9 @@ public class OrderResource {
         order.setTotalPrice(total);
 
         em.persist(order);
+        em.flush(); // ensure ID is generated before returning/publishing
 
-        if (notificationService != null) {
-            notificationService.addOrderCreated(order);
-        }
+        orderEventPublisher.publishOrderCreated(order);
 
         HashMap<String, Object> result = new HashMap<>();
         result.put("id", order.getId());

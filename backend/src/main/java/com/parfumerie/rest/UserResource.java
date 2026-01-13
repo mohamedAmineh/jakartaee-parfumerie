@@ -1,6 +1,7 @@
 package com.parfumerie.rest;
 
 import com.parfumerie.domain.User;
+import com.parfumerie.messaging.UserCreatedProducer;
 import com.parfumerie.service.UserService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -17,6 +18,9 @@ public class UserResource {
 
     @Inject
     private UserService userService;
+
+    @Inject
+    private UserCreatedProducer userCreatedProducer;
 
     public static class CreateUserRequest {
         public String firstName;
@@ -37,6 +41,12 @@ public class UserResource {
             User created = userService.createUser(
                     req.firstName, req.lastName, req.email, req.phone, req.password, req.address, null
             );
+            // Best-effort JMS : ne bloque pas si JMS absent
+            try {
+                userCreatedProducer.sendUserCreatedEvent(created);
+            } catch (Exception e) {
+                System.err.println("JMS user-created skipped: " + e.getMessage());
+            }
             return Response.status(Response.Status.CREATED)
                     .entity(AuthResource.UserResponse.from(created))
                     .build();

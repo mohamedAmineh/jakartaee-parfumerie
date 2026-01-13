@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { getAuthHeaders } from "../../services/auth";
 
 const API = "http://localhost:8080/starter/api/orders";
-const STATUS_OPTIONS = ["PENDING", "PAID", "SHIPPED", "CANCELLED"];
 
 export default function ManageOredrsPage() {
   const [data, setData] = useState([]);
@@ -10,6 +9,8 @@ export default function ManageOredrsPage() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState(null);
+  // commandes routées en "high value" (par le router backend)
+  const [highValueIds, setHighValueIds] = useState(new Set());
 
   useEffect(() => {
     refresh();
@@ -19,13 +20,28 @@ export default function ManageOredrsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API, { headers: { ...getAuthHeaders() } });
+      const res = await fetch(API);
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || `HTTP ${res.status}`);
       }
-      const items = await res.json();
-      setData(Array.isArray(items) ? items : []);
+
+      const orders = await ordersRes.json();
+      setData(Array.isArray(orders) ? orders : []);
+
+      if (highValueRes && highValueRes.ok) {
+        const events = await highValueRes.json();
+        const ids = new Set(
+          Array.isArray(events)
+            ? events
+                .map((e) => e.orderId ?? e.id)
+                .filter((id) => id !== null && id !== undefined)
+            : []
+        );
+        setHighValueIds(ids);
+      } else {
+        setHighValueIds(new Set());
+      }
     } catch (err) {
       setError(err?.message || "Erreur lors du chargement.");
     } finally {
@@ -77,7 +93,10 @@ export default function ManageOredrsPage() {
       <div style={styles.topBar}>
         <div>
           <h1 style={styles.h1}>Gestion des commandes</h1>
-          <p style={styles.p}>Liste + détails (comme la page catalogue).</p>
+          <p style={styles.p}>
+            Liste + détails (comme la page catalogue). Badge rouge si routé en high
+            value.
+          </p>
         </div>
 
         <button onClick={refresh} style={styles.btn} disabled={loading}>
@@ -106,6 +125,20 @@ export default function ManageOredrsPage() {
                   : o.total != null
                     ? `${o.total} €`
                     : "—";
+              const numericTotal =
+                o.totalPrice ?? o.total ?? (Array.isArray(o.items)
+                  ? o.items.reduce(
+                      (acc, it) =>
+                        acc +
+                        Number(it.quantity ?? 0) *
+                          Number(it.unitPrice ?? it.price ?? 0),
+                      0
+                    )
+                  : null);
+
+              const isHighValue =
+                highValueIds.has(o.id) ||
+                (numericTotal != null && Number(numericTotal) >= HIGH_VALUE_THRESHOLD);
 
               return (
                 <button
@@ -117,6 +150,7 @@ export default function ManageOredrsPage() {
                   <div style={styles.rowLine1}>
                     <span style={styles.rowTitle}>Commande #{o.id}</span>
                     <span style={styles.rowMeta}>{o.status ?? "—"}</span>
+                    {isHighValue && <span style={styles.badgeDanger}>HIGH VALUE</span>}
                   </div>
 
                   <div style={styles.rowLine2}>
@@ -151,6 +185,11 @@ export default function ManageOredrsPage() {
                     <span style={styles.muted}>
                       {selected.orderDate ?? selected.createdAt ?? "Date: —"}
                     </span>
+                    {(highValueIds.has(selected.id) ||
+                      Number(selected.totalPrice ?? selected.total ?? 0) >=
+                        HIGH_VALUE_THRESHOLD) && (
+                      <span style={styles.badgeDanger}>HIGH VALUE</span>
+                    )}
                   </div>
                 </div>
 
@@ -376,6 +415,18 @@ const styles = {
     fontSize: 12,
     letterSpacing: 0.2,
   },
+  badgeDanger: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid rgba(255,0,0,0.25)",
+    background: "rgba(255,0,0,0.10)",
+    color: "#d12b23",
+    fontWeight: 900,
+    fontSize: 12,
+    letterSpacing: 0.2,
+  },
 
   totalBox: {
     minWidth: 140,
@@ -436,13 +487,4 @@ const styles = {
     marginTop: 8,
   },
   itemPrice: { fontWeight: 900, color: "#1c1916" },
-
-  statusRow: { display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" },
-  select: {
-    padding: "8px 10px",
-    borderRadius: 10,
-    border: "1px solid rgba(28,25,22,0.12)",
-    background: "#fff",
-    fontWeight: 700,
-  },
 };
