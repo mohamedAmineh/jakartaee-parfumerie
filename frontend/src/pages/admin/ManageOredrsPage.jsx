@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { getAuthHeaders } from "../../services/auth";
 
 const API = "http://localhost:8080/starter/api/orders";
+const HIGH_VALUE_THRESHOLD = 500;
+const HIGH_VALUE_API = "http://localhost:8080/starter/api/orders/high-value";
 
 export default function ManageOredrsPage() {
   const [data, setData] = useState([]);
@@ -20,15 +22,16 @@ export default function ManageOredrsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API);
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `HTTP ${res.status}`);
+      const ordersRes = await fetch(API);
+      if (!ordersRes.ok) {
+        const txt = await ordersRes.text();
+        throw new Error(txt || `HTTP ${ordersRes.status}`);
       }
 
       const orders = await ordersRes.json();
       setData(Array.isArray(orders) ? orders : []);
 
+      const highValueRes = await fetch(HIGH_VALUE_API);
       if (highValueRes && highValueRes.ok) {
         const events = await highValueRes.json();
         const ids = new Set(
