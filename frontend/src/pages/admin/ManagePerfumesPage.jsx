@@ -38,6 +38,18 @@ export default function ManagePerfumesPage() {
     );
   }, [data, filter]);
 
+  const lowStockInfo = useMemo(() => {
+    const low = data.filter((p) => {
+      const stockValue = Number(p.stock ?? 0);
+      return stockValue > 0 && stockValue < 4;
+    });
+    const lowest = low.reduce((min, p) => {
+      const stockValue = Number(p.stock ?? 0);
+      return stockValue < min ? stockValue : min;
+    }, Infinity);
+    return { count: low.length, lowest: lowest === Infinity ? null : lowest, names: low.map((p) => p.name).filter(Boolean) };
+  }, [data]);
+
   useEffect(() => {
     // si l'element selectionne n'existe plus, on vide
     if (selected) {
@@ -163,6 +175,27 @@ export default function ManagePerfumesPage() {
           color: #b33a2b;
           margin-right: 6px;
         }
+        .admin-manage__alert {
+          padding: 8px 12px;
+          border-radius: 12px;
+          background: rgba(255, 107, 107, 0.12);
+          border: 1px solid rgba(255, 107, 107, 0.25);
+          color: #b33a2b;
+          font-weight: 700;
+          font-size: 13px;
+        }
+        .admin-manage__low-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 4px 8px;
+          border-radius: 999px;
+          font-weight: 700;
+          font-size: 11px;
+          border: 1px solid rgba(255, 107, 107, 0.35);
+          background: rgba(255, 107, 107, 0.12);
+          color: #b33a2b;
+          margin-left: 6px;
+        }
         .admin-manage__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .admin-manage__ghost {
           padding: 8px 12px;
@@ -250,13 +283,25 @@ export default function ManagePerfumesPage() {
             <span className="admin-manage__badge">{filtered.length} références</span>
           </div>
           {error && <p className="admin-manage__error">Erreur: {error}</p>}
+          {lowStockInfo.count > 0 && (
+            <p className="admin-manage__alert">
+              Alerte stock faible: {lowStockInfo.count} reference(s)
+              {lowStockInfo.lowest !== null ? ` (min: ${lowStockInfo.lowest})` : ""}.
+              {lowStockInfo.names.length > 0
+                ? ` Parfums: ${lowStockInfo.names.join(", ")}.`
+                : ""}
+            </p>
+          )}
         </div>
 
         {loading && <p className="admin-manage__muted">Chargement...</p>}
 
         <div className="admin-manage__layout">
           <div className="admin-manage__grid">
-            {filtered.map((p) => (
+            {filtered.map((p) => {
+              const stockValue = Number(p.stock ?? 0);
+              const lowStock = stockValue > 0 && stockValue < 4;
+              return (
               <div
                 className={`admin-manage__row ${selected?.id === p.id ? "admin-manage__row--active" : ""}`}
                 key={p.id}
@@ -268,7 +313,7 @@ export default function ManagePerfumesPage() {
                     <div className="admin-manage__brand">{p.brand || "Marque inconnue"}</div>
                   </div>
                   <div className="admin-manage__status">
-                    {p.available ? "Disponible" : "Indisponible"} • Stock: {p.stock ?? 0}
+                    {p.available ? "Disponible" : "Indisponible"} • Stock: {p.stock ?? 0} {lowStock && <span className="admin-manage__low-badge">Stock faible</span>}
                   </div>
                 </div>
                 <div className="admin-manage__muted">
@@ -315,7 +360,8 @@ export default function ManagePerfumesPage() {
                   </button>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
 
           <div className="admin-manage__card admin-manage__side">
@@ -325,7 +371,7 @@ export default function ManagePerfumesPage() {
                 <p><strong>Nom:</strong> {selected.name}</p>
                 <p><strong>Marque:</strong> {selected.brand || "N/A"}</p>
                 <p><strong>Prix:</strong> {selected.price ?? "-"} {selected.price ? "€" : ""}</p>
-                <p><strong>Stock:</strong> {selected.stock ?? 0}</p>
+                <p><strong>Stock:</strong> {selected.stock ?? 0} {Number(selected.stock ?? 0) > 0 && Number(selected.stock ?? 0) < 4 && (<span className="admin-manage__low-badge">Stock faible</span>)}</p>
                 <p><strong>Disponible:</strong> {selected.available ? "Oui" : "Non"}</p>
                 <p><strong>Format:</strong> {selected.format || "N/A"}</p>
                 {selected.description && <p><strong>Description:</strong> {selected.description}</p>}
