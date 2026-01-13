@@ -1,6 +1,3 @@
-```markdown
-<div align="center">
-
 # 🧴 JakartaEE Parfumerie
 
 **Application e-commerce full-stack “Parfumerie”**  
@@ -12,7 +9,6 @@ Backend Jakarta EE (Payara Micro) + PostgreSQL + Frontend React (Vite)
 
 [🚀 Démo Live](http://localhost:5173) | [📖 API Docs](http://localhost:8080/starter/api/application.wadl)
 
-</div>
 
 ## ✨ Fonctionnalités
 
