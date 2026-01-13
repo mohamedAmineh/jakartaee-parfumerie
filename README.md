@@ -110,3 +110,13 @@ node --version
 npm --version
 ```
 
+## 👥 Utilisateurs pré-créés
+
+Au premier démarrage, le `DataSeeder.java` insère automatiquement **2 utilisateurs** avec le mot de passe `123` :
+
+| **Rôle** | **Email** | **Mot de passe** | **Accès** |
+|----------|-----------|------------------|-----------|
+| **ADMIN** | `admin@parfumerie.local` | `123` | Backoffice `/admin` |
+| **CLIENT** | `client@parfumerie.local` | `123` | Catalogue + panier |
+
+✅ **Test direct** : `http://localhost:5173/auth` → Connexion → Admin ou Client.
