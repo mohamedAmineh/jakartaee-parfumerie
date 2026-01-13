@@ -1,6 +1,7 @@
 package com.parfumerie.service;
 
 import com.parfumerie.domain.Order;
+import com.parfumerie.messaging.OrderCreatedEvent;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
 
@@ -34,13 +35,33 @@ public class NotificationService {
         n.status = order.getStatus();
         n.createdAt = order.getOrderDate() != null ? order.getOrderDate() : LocalDateTime.now();
 
-        events.addFirst(n);
-        while (events.size() > MAX_EVENTS) {
-            events.removeLast();
-        }
+        addNotification(n);
+    }
+
+    /**
+     * Content Enricher/Event Message: consume an order-created event coming from the async pipeline.
+     */
+    public synchronized void addOrderCreated(OrderCreatedEvent event) {
+        if (event == null) return;
+
+        OrderNotification n = new OrderNotification();
+        n.orderId = event.getOrderId();
+        n.customerEmail = event.getCustomerEmail();
+        n.total = event.getTotal();
+        n.status = event.getStatus();
+        n.createdAt = event.getCreatedAt() != null ? event.getCreatedAt() : LocalDateTime.now();
+
+        addNotification(n);
     }
 
     public synchronized List<OrderNotification> getRecent() {
         return new ArrayList<>(events);
+    }
+
+    private void addNotification(OrderNotification n) {
+        events.addFirst(n);
+        while (events.size() > MAX_EVENTS) {
+            events.removeLast();
+        }
     }
 }
