@@ -9,6 +9,7 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import AuthPage from "./pages/AuthPage";
 import CartPage from "./pages/CartPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
+import MyProfilePage from "./pages/MyProfilePage";
 
 import AdminHomePage from "./pages/admin/AdminHomePage";
 import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
@@ -16,8 +17,6 @@ import ManageOredrsPage from "./pages/admin/ManageOredrsPage";
 import EditPerfumePage from "./pages/admin/EditPerfumePage";
 import CreatePerfumePage from "./pages/admin/CreatePerfumePage";
 import AdminStatsPage from "./pages/admin/AdminStatsPage";
-
-import MesCommandes from "./pages/MesCommandes";
 
 export default function App() {
   return (
@@ -31,8 +30,7 @@ export default function App() {
         <Route path="auth" element={<AuthPage />} />
         <Route path="cart" element={<CartPage />} />
         <Route path="orders" element={<MyOrdersPage />} />
-
-        <Route path="mes-commandes" element={<MesCommandes />} />
+        <Route path="profile" element={<MyProfilePage />} />
 
         {/* Admin */}
         <Route

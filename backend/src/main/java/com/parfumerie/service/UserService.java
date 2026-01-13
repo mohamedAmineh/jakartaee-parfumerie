@@ -74,6 +74,64 @@ public class UserService {
         return u;
     }
 
+    public User updateUser(Long id, String firstName, String lastName, String email, String phone,
+                           String plainPassword, String address) {
+        if (id == null) return null;
+
+        User u = em.find(User.class, id);
+        if (u == null) return null;
+
+        String normalizedEmail = null;
+        if (email != null) {
+            normalizedEmail = normalizeEmail(email);
+            if (normalizedEmail.isBlank()) {
+                throw new IllegalArgumentException("email is required");
+            }
+            User existingByEmail = findByEmail(normalizedEmail);
+            if (existingByEmail != null && !existingByEmail.getId().equals(u.getId())) {
+                throw new IllegalArgumentException("email deja utilise");
+            }
+        }
+
+        boolean changed = false;
+
+        if (firstName != null) {
+            if (firstName.isBlank()) throw new IllegalArgumentException("firstName is required");
+            u.setFirstName(firstName);
+            changed = true;
+        }
+        if (lastName != null) {
+            if (lastName.isBlank()) throw new IllegalArgumentException("lastName is required");
+            u.setLastName(lastName);
+            changed = true;
+        }
+        if (normalizedEmail != null) {
+            u.setEmail(normalizedEmail);
+            changed = true;
+        }
+        if (phone != null) {
+            if (phone.isBlank()) throw new IllegalArgumentException("phone is required");
+            u.setPhone(phone);
+            changed = true;
+        }
+        if (plainPassword != null) {
+            if (plainPassword.isBlank()) throw new IllegalArgumentException("password is required");
+            String passwordHash = BCrypt.hashpw(plainPassword, BCrypt.gensalt(12));
+            u.setPassword(passwordHash);
+            changed = true;
+        }
+        if (address != null) {
+            u.setAddress(address);
+            changed = true;
+        }
+
+        if (!changed) {
+            throw new IllegalArgumentException("No fields to update");
+        }
+
+        return u;
+    }
+
     private String normalizeEmail(String email) {
         if (email == null) return null;
         return email.trim().toLowerCase();
