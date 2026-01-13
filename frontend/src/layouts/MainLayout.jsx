@@ -1,9 +1,12 @@
 import NavBar from "../components/NavBar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 export default function MainLayout() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+
   return (
-    <div style={styles.page}>
+    <div style={styles.page} className={`${isAdmin ? "theme-admin" : "theme-client"} page-enter`}>
       <NavBar />
       <Outlet />
     </div>

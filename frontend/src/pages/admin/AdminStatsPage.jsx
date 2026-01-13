@@ -425,7 +425,7 @@ export default function AdminStatsPage() {
           </Link>
         </header>
 
-        <section className="admin-stats__grid">
+        <section className="admin-stats__grid stagger">
           {kpis.map((kpi) => (
             <div key={kpi.label} className="admin-stats__card">
               <p className="admin-stats__kpi-label">{kpi.label}</p>

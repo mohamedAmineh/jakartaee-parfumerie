@@ -257,6 +257,34 @@ export default function AdminHomePage() {
           gap: 10px;
         }
 
+        .admin-home__icon {
+          width: 42px;
+          height: 42px;
+          border-radius: 14px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(255, 176, 136, 0.3);
+          color: #b33a2b;
+        }
+
+        .admin-home__icon svg {
+          width: 22px;
+          height: 22px;
+        }
+
+        .admin-home__icon--orders {
+          color: #7a3d2c;
+          border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        .admin-home__icon--stats {
+          color: #1a7f4f;
+          border-color: rgba(68, 200, 161, 0.4);
+          background: rgba(68, 200, 161, 0.12);
+        }
+
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(14px); }
@@ -279,7 +307,7 @@ export default function AdminHomePage() {
           </div>
         </header>
 
-        <section className="admin-home__grid">
+        <section className="admin-home__grid stagger">
 
           <Link
             to="/admin/perfumes/manage"
@@ -287,6 +315,13 @@ export default function AdminHomePage() {
             style={{ textDecoration: "none" }}
           >
             <div className="admin-home__stack">
+              <div className="admin-home__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M6 4h9l3 3v13H6z" />
+                  <path d="M15 4v3h3" />
+                  <path d="M8 13h8M8 17h5" />
+                </svg>
+              </div>
               <h2 className="admin-home__card-title">Etat du catalogue</h2>
               <p className="admin-home__highlight">Consulter les stocks</p>
               <p className="admin-home__card-text">
@@ -302,6 +337,13 @@ export default function AdminHomePage() {
             style={{ textDecoration: "none" }}
           >
             <div className="admin-home__stack">
+              <div className="admin-home__icon admin-home__icon--orders">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 7h16l-2 11H6z" />
+                  <path d="M7 7l1-3h8l1 3" />
+                  <path d="M9.5 11h5M9 15h6" />
+                </svg>
+              </div>
               <h2 className="admin-home__card-title">Etat des commandes</h2>
               <p className="admin-home__highlight">Consulter les commandes.</p>
               <p className="admin-home__card-text">
@@ -317,6 +359,14 @@ export default function AdminHomePage() {
             style={{ textDecoration: "none" }}
           >
             <div className="admin-home__stack">
+              <div className="admin-home__icon admin-home__icon--stats">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 19h16" />
+                  <path d="M7 16V9" />
+                  <path d="M12 16V6" />
+                  <path d="M17 16v-4" />
+                </svg>
+              </div>
               <h2 className="admin-home__card-title">Statistiques</h2>
               <p className="admin-home__highlight">Ventes & top parfums</p>
               <p className="admin-home__card-text">
