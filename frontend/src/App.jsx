@@ -12,6 +12,7 @@ import CartPage from "./pages/CartPage";
 import AdminHomePage from "./pages/admin/AdminHomePage";
 import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
 import ManageOredrsPage from "./pages/admin/ManageOredrsPage";
+import EditPerfumePage from "./pages/admin/EditPerfumePage";
 
 export default function App() {
   return (
@@ -39,6 +40,14 @@ export default function App() {
           element={
             <AdminRoute>
               <ManagePerfumesPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="admin/perfumes/:id/edit"
+          element={
+            <AdminRoute>
+              <EditPerfumePage />
             </AdminRoute>
           }
         />

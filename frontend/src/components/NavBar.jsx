@@ -13,6 +13,7 @@ export default function NavBar() {
   const logout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("auth");
     navigate("/", { replace: true });
   };
 

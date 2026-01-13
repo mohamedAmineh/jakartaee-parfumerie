@@ -1,7 +1,6 @@
 package com.parfumerie.rest;
 
 import com.parfumerie.domain.Perfume;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
@@ -60,7 +59,6 @@ public class PerfumeResource {
     }
 
     @POST
-    @RolesAllowed("ADMIN")
     public Response create(Perfume perfume) {
         Response validation = validateAndApplyStockRules(perfume);
         if (validation != null) return validation;
@@ -71,7 +69,6 @@ public class PerfumeResource {
 
     @PUT
     @Path("{id}")
-    @RolesAllowed("ADMIN")
     public Response update(@PathParam("id") Long id, Perfume data) {
         Perfume existing = em.find(Perfume.class, id);
         if (existing == null) return Response.status(Response.Status.NOT_FOUND).build();
@@ -96,7 +93,6 @@ public class PerfumeResource {
 
     @DELETE
     @Path("{id}")
-    @RolesAllowed("ADMIN")
     public Response delete(@PathParam("id") Long id) {
         Perfume p = em.find(Perfume.class, id);
         if (p == null) return Response.status(Response.Status.NOT_FOUND).build();

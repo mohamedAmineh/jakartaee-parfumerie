@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { getAuthHeaders } from "../../services/auth";
 
 const API = "http://localhost:8080/starter/api/perfumes";
 
@@ -47,12 +48,16 @@ export default function ManagePerfumesPage() {
   }, [data, selected]);
 
   async function toggleAvailability(id, available) {
+    if (!localStorage.getItem("auth")) {
+      setError("Session admin expiree. Reconnecte-toi.");
+      return;
+    }
     setBusyId(id);
     try {
       const body = JSON.stringify({ available: !available });
       const res = await fetch(`${API}/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body,
       });
       if (!res.ok) {
@@ -68,10 +73,17 @@ export default function ManagePerfumesPage() {
   }
 
   async function deletePerfume(id) {
+    if (!localStorage.getItem("auth")) {
+      setError("Session admin expiree. Reconnecte-toi.");
+      return;
+    }
     if (!window.confirm("Supprimer ce parfum ?")) return;
     setBusyId(id);
     try {
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API}/${id}`, {
+        method: "DELETE",
+        headers: { ...getAuthHeaders() },
+      });
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || `HTTP ${res.status}`);
@@ -263,6 +275,14 @@ export default function ManagePerfumesPage() {
                   Prix: {p.price ?? "-"} {p.price ? "€" : ""}
                 </div>
                 <div className="admin-manage__actions">
+                  <Link
+                    to={`/admin/perfumes/${p.id}/edit`}
+                    className="admin-manage__ghost"
+                    style={{ textDecoration: "none" }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Modifier
+                  </Link>
                   <button
                     className="admin-manage__ghost"
                     onClick={(e) => {
@@ -311,6 +331,13 @@ export default function ManagePerfumesPage() {
                 {selected.description && <p><strong>Description:</strong> {selected.description}</p>}
                 {selected.comment && <p><strong>Commentaire:</strong> {selected.comment}</p>}
                 <div className="admin-manage__actions" style={{ marginTop: "12px" }}>
+                  <Link
+                    to={`/admin/perfumes/${selected.id}/edit`}
+                    className="admin-manage__ghost"
+                    style={{ textDecoration: "none" }}
+                  >
+                    Modifier
+                  </Link>
                   <button
                     className="admin-manage__ghost"
                     onClick={() => toggleAvailability(selected.id, selected.available)}
