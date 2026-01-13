@@ -32,6 +32,12 @@ export default function NavBar() {
             Panier
           </Link>
 
+          {isLoggedIn && (
+            <Link to="/mes-commandes" style={styles.pill}>
+              Mes commandes
+            </Link>
+          )}
+
           {isAdmin && (
             <Link to="/admin" style={{ ...styles.pill }}>
               Dashboard

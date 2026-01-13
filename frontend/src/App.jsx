@@ -13,6 +13,8 @@ import AdminHomePage from "./pages/admin/AdminHomePage";
 import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
 import ManageOredrsPage from "./pages/admin/ManageOredrsPage";
 
+import MesCommandes from "./pages/MesCommandes";
+
 export default function App() {
   return (
     <Routes>
@@ -24,6 +26,8 @@ export default function App() {
 
         <Route path="auth" element={<AuthPage />} />
         <Route path="cart" element={<CartPage />} />
+
+        <Route path="mes-commandes" element={<MesCommandes />} />
 
         {/* Admin */}
         <Route
