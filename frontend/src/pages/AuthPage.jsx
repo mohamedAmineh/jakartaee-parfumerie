@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { encodeBasicAuth } from "../services/auth";
 
 const LOGIN_URL = "http://localhost:8080/starter/api/auth/login";
 const SIGNUP_URL = "http://localhost:8080/starter/api/users";
@@ -53,6 +54,7 @@ export default function AuthPage() {
   function handleLogout() {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("auth");
     setCurrentUser(null);
     setSuccess(null);
     setMode("login");
@@ -72,6 +74,7 @@ export default function AuthPage() {
 
     const user = await res.json();
     localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("auth", encodeBasicAuth(loginEmail, loginPassword));
     setCurrentUser(user);
 
     if (isAdminUser(user)) {

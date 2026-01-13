@@ -22,8 +22,8 @@ services:
       - ARTEMIS_PASSWORD=adminMOH123
       - ANONYMOUS_LOGIN=true
     ports:
-      - "8161:8161"
-      - "61616:61616"
+      - "127.0.0.1:62010:61616"
+      - "127.0.0.1:8161:8161"
     volumes:
       - artemisdata:/var/lib/artemis-instance
 

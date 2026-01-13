@@ -3,8 +3,13 @@ import { Link } from 'react-router-dom';
 
 const PerfumeCard = ({ perfume, variant = "default" }) => {
   const isSoft = variant === "soft";
+  const stockValue = Number(perfume.stock ?? 0);
+  const isLow = perfume.available && stockValue > 0 && stockValue < 4;
   return (
     <div style={isSoft ? stylesSoft.card : styles.card}>
+      {isLow && (
+        <span style={isSoft ? stylesSoft.badge : styles.badge}>Stock faible</span>
+      )}
       <h3 style={isSoft ? stylesSoft.name : styles.name}>{perfume.name}</h3>
       <p style={isSoft ? stylesSoft.brand : styles.brand}>{perfume.brand}</p>
       <p style={isSoft ? stylesSoft.price : styles.price}>{perfume.price}€</p>
@@ -20,6 +25,7 @@ const PerfumeCard = ({ perfume, variant = "default" }) => {
 
 const styles = {
   card: {
+    position: 'relative',
     border: '1px solid #e0e0e0',
     borderRadius: '12px',
     padding: '20px',
@@ -32,6 +38,17 @@ const styles = {
   brand: { color: '#666', fontSize: '14px' },
   price: { fontSize: '24px', color: '#333', fontWeight: 'bold', margin: '10px 0' },
   stock: { fontSize: '14px', color: '#999' },
+  badge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    padding: '6px 10px',
+    borderRadius: 999,
+    background: 'rgba(255, 107, 107, 0.14)',
+    color: '#b33a2b',
+    fontWeight: 700,
+    fontSize: '12px',
+  },
   link: {
     display: 'inline-block',
     marginTop: '10px',
@@ -45,6 +62,7 @@ const styles = {
 
 const stylesSoft = {
   card: {
+    position: 'relative',
     border: '1px solid rgba(255, 176, 136, 0.2)',
     borderRadius: '16px',
     padding: '18px',
@@ -57,6 +75,17 @@ const stylesSoft = {
   brand: { color: '#6f655c', fontSize: '14px' },
   price: { fontSize: '22px', color: '#1c1916', fontWeight: '700', margin: '8px 0' },
   stock: { fontSize: '13px', color: '#6f655c' },
+  badge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    padding: '6px 10px',
+    borderRadius: 999,
+    background: 'rgba(255, 107, 107, 0.12)',
+    color: '#b33a2b',
+    fontWeight: '700',
+    fontSize: '12px',
+  },
   link: {
     display: 'inline-block',
     marginTop: '10px',

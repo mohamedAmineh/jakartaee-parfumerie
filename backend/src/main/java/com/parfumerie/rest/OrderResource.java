@@ -76,6 +76,7 @@ public class OrderResource {
         order.setStatus(req.status != null ? req.status : "PENDING");
         order.setItems(new ArrayList<>());
         order.setOrderDate(LocalDateTime.now());
+        order.setShippingAddress(user.getAddress());
 
         BigDecimal total = BigDecimal.ZERO;
 

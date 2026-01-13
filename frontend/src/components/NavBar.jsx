@@ -13,6 +13,7 @@ export default function NavBar() {
   const logout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("auth");
     navigate("/", { replace: true });
   };
 
@@ -32,9 +33,15 @@ export default function NavBar() {
             Panier
           </Link>
 
-          {isLoggedIn && (
-            <Link to="/mes-commandes" style={styles.pill}>
+          {isLoggedIn && !isAdmin && (
+            <Link to="/orders" style={styles.pill}>
               Mes commandes
+            </Link>
+          )}
+
+          {isLoggedIn && !isAdmin && (
+            <Link to="/profile" style={styles.pill}>
+              Mon profil
             </Link>
           )}
 
@@ -64,9 +71,8 @@ const styles = {
     position: "sticky",
     top: 0,
     zIndex: 100,
-    background:
-      "radial-gradient(circle at 12% 15%, rgba(255, 177, 136, 0.26), transparent 48%), radial-gradient(circle at 88% 18%, rgba(255, 107, 107, 0.14), transparent 52%), #fffaf6",
-    borderBottom: "1px solid rgba(255, 176, 136, 0.20)",
+    background: "var(--nav-bg)",
+    borderBottom: "1px solid rgba(255, 176, 136, 0.2)",
     backdropFilter: "blur(10px)",
   },
 
@@ -105,13 +111,18 @@ const styles = {
     fontFamily: "Manrope, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     fontWeight: 800,
     fontSize: 13,
-    color: "#1c1916",
+    color: "var(--nav-pill-text)",
     textDecoration: "none",
     padding: "10px 14px",
     borderRadius: 999,
-    border: "1px solid rgba(28,25,22,0.10)",
-    background: "rgba(255,255,255,0.85)",
+    border: "1px solid var(--nav-pill-border)",
+    background: "var(--nav-pill-bg)",
     cursor: "pointer",
+  },
+  pillPrimary: {
+    border: "1px solid rgba(255,107,107,0.4)",
+    background: "var(--nav-accent-bg)",
+    color: "var(--nav-accent-text)",
   },
   pillOk: {
     border: "1px solid rgba(28,25,22,0.10)",

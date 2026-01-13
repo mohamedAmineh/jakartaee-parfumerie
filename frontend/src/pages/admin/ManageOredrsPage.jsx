@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { getAuthHeaders } from "../../services/auth";
 
 const API = "http://localhost:8080/starter/api/orders";
+const STATUS_OPTIONS = ["PENDING", "PAID", "SHIPPED", "CANCELLED"];
 
 export default function ManageOredrsPage() {
   const [data, setData] = useState([]);
@@ -17,7 +19,7 @@ export default function ManageOredrsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API);
+      const res = await fetch(API, { headers: { ...getAuthHeaders() } });
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || `HTTP ${res.status}`);
@@ -26,6 +28,29 @@ export default function ManageOredrsPage() {
       setData(Array.isArray(items) ? items : []);
     } catch (err) {
       setError(err?.message || "Erreur lors du chargement.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateStatus(orderId, status) {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API}/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `HTTP ${res.status}`);
+      }
+      const updated = await res.json();
+      setData((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+      setSelected(updated);
+    } catch (err) {
+      setError(err?.message || "Erreur lors de la mise a jour.");
     } finally {
       setLoading(false);
     }
@@ -45,7 +70,7 @@ export default function ManageOredrsPage() {
     if (!selected) return;
     const stillThere = data.find((o) => o.id === selected.id);
     setSelected(stillThere || null);
-  }, [data, selected]);
+  }, [data]);
 
   return (
     <div style={styles.page}>
@@ -163,6 +188,35 @@ export default function ManageOredrsPage() {
                   <div style={styles.kvLabel}>Adresse</div>
                   <div style={styles.kvValue}>
                     {selected.shippingAddress ?? "—"}
+                  </div>
+                </div>
+                <div style={styles.kvItem}>
+                  <div style={styles.kvLabel}>Statut</div>
+                  <div style={styles.kvValue}>
+                    <div style={styles.statusRow}>
+                      <select
+                        value={selected.status ?? "PENDING"}
+                        onChange={(e) => {
+                          const next = { ...selected, status: e.target.value };
+                          setSelected(next);
+                        }}
+                        style={styles.select}
+                      >
+                        {STATUS_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        style={styles.btn}
+                        onClick={() => updateStatus(selected.id, selected.status ?? "PENDING")}
+                        disabled={loading}
+                      >
+                        Enregistrer
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -382,4 +436,13 @@ const styles = {
     marginTop: 8,
   },
   itemPrice: { fontWeight: 900, color: "#1c1916" },
+
+  statusRow: { display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" },
+  select: {
+    padding: "8px 10px",
+    borderRadius: 10,
+    border: "1px solid rgba(28,25,22,0.12)",
+    background: "#fff",
+    fontWeight: 700,
+  },
 };

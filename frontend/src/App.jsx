@@ -8,10 +8,14 @@ import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import AuthPage from "./pages/AuthPage";
 import CartPage from "./pages/CartPage";
+import MyOrdersPage from "./pages/MyOrdersPage";
 
 import AdminHomePage from "./pages/admin/AdminHomePage";
 import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
 import ManageOredrsPage from "./pages/admin/ManageOredrsPage";
+import EditPerfumePage from "./pages/admin/EditPerfumePage";
+import CreatePerfumePage from "./pages/admin/CreatePerfumePage";
+import AdminStatsPage from "./pages/admin/AdminStatsPage";
 
 import MesCommandes from "./pages/MesCommandes";
 
@@ -26,6 +30,7 @@ export default function App() {
 
         <Route path="auth" element={<AuthPage />} />
         <Route path="cart" element={<CartPage />} />
+        <Route path="orders" element={<MyOrdersPage />} />
 
         <Route path="mes-commandes" element={<MesCommandes />} />
 
@@ -47,10 +52,34 @@ export default function App() {
           }
         />
         <Route
+          path="admin/perfumes/new"
+          element={
+            <AdminRoute>
+              <CreatePerfumePage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="admin/perfumes/:id/edit"
+          element={
+            <AdminRoute>
+              <EditPerfumePage />
+            </AdminRoute>
+          }
+        />
+        <Route
           path="admin/orders"
           element={
             <AdminRoute>
               <ManageOredrsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="admin/stats"
+          element={
+            <AdminRoute>
+              <AdminStatsPage />
             </AdminRoute>
           }
         />
