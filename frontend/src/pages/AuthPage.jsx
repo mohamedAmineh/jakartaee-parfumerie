@@ -53,7 +53,6 @@ export default function AuthPage() {
 
   function handleLogout() {
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
     localStorage.removeItem("auth");
     setCurrentUser(null);
     setSuccess(null);

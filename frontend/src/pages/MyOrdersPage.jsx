@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAuthHeaders } from "../services/auth";
-
-const API = "http://localhost:8080/starter/api/orders";
+import { fetchUserOrders } from "../application/useCases/orders";
 
 const formatEur = (value) => {
   if (value == null || Number.isNaN(Number(value))) return "-";
@@ -16,22 +14,12 @@ export default function MyOrdersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!user) return;
-    refresh();
-  }, [user]);
-
   async function refresh() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API, { headers: { ...getAuthHeaders() } });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setOrders(Array.isArray(data) ? data : []);
+      const allOrders = await fetchUserOrders();
+      setOrders(Array.isArray(allOrders) ? allOrders : []);
     } catch (err) {
       setError(err?.message || "Erreur lors du chargement.");
     } finally {
@@ -39,10 +27,17 @@ export default function MyOrdersPage() {
     }
   }
 
+  useEffect(() => {
+    if (!user) return;
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   const filtered = useMemo(() => {
     if (!user) return [];
     const userId = user.id;
     const email = String(user.email || "").toLowerCase();
+
     return orders
       .filter((o) => {
         const orderEmail = String(o.user?.email ?? o.userEmail ?? "").toLowerCase();
@@ -71,15 +66,12 @@ export default function MyOrdersPage() {
 
   if (!user) {
     return (
-      <div className="my-orders">
-        <style>{styles}</style>
-        <div className="my-orders__wrap">
-          <div className="my-orders__card">
-            <h1>Mes commandes</h1>
-            <p>Connecte-toi pour voir tes commandes.</p>
-            <Link to="/auth" className="my-orders__button">
-              Se connecter
-            </Link>
+      <div style={styles.page}>
+        <div style={styles.wrap}>
+          <div style={styles.card}>
+            <h1 style={styles.h1}>Mes commandes</h1>
+            <p style={styles.muted}>Connecte-toi pour voir tes commandes.</p>
+            <Link to="/auth" style={styles.primaryLink}>Se connecter</Link>
           </div>
         </div>
       </div>
@@ -87,348 +79,231 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <div className="my-orders">
-      <style>{styles}</style>
-      <div className="my-orders__wrap">
-        <header className="my-orders__header">
+    <div style={styles.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap');
+      `}</style>
+
+      <div style={styles.wrap}>
+        <header style={styles.header}>
           <div>
-            <h1>Mes commandes</h1>
-            <p>Consulte le statut, les articles et les details de livraison.</p>
+            <h1 style={styles.h1}>Mes commandes</h1>
+            <p style={styles.muted}>Consulte le statut, les articles et les détails de livraison.</p>
           </div>
-          <button type="button" onClick={refresh} className="my-orders__ghost" disabled={loading}>
-            {loading ? "Chargement..." : "Rafraichir"}
+          <button type="button" onClick={refresh} disabled={loading} style={styles.ghostBtn}>
+            {loading ? "Chargement..." : "Rafraîchir"}
           </button>
         </header>
 
-        {error && <div className="my-orders__error">Erreur: {error}</div>}
+        {error && <div style={styles.error}>Erreur: {error}</div>}
 
-        <div className="my-orders__layout">
-          <div className="my-orders__panel">
-            <div className="my-orders__list">
+        <div style={styles.layout}>
+          <section style={styles.panel}>
+            {loading && <div style={styles.empty}>Chargement...</div>}
+            {!loading && filtered.length === 0 && (
+              <div style={styles.empty}>Aucune commande pour le moment.</div>
+            )}
+
+            <div style={styles.list}>
               {filtered.map((o) => {
-                const total = formatEur(o.totalPrice ?? o.total);
                 const isActive = selected?.id === o.id;
+                const total = o.totalPrice ?? o.total;
+                const date = o.orderDate ?? o.createdAt ?? "N/A";
                 return (
                   <button
                     key={o.id}
                     type="button"
-                    className={`my-orders__row ${isActive ? "my-orders__row--active" : ""}`}
                     onClick={() => setSelected(o)}
+                    style={{ ...styles.row, ...(isActive ? styles.rowActive : {}) }}
                   >
                     <div>
-                      <div className="my-orders__row-title">Commande #{o.id}</div>
-                      <div className="my-orders__row-meta">
-                        {o.status ?? "PENDING"} • {o.orderDate ?? o.createdAt ?? "Date N/A"}
+                      <div style={styles.rowTitle}>Commande {o.id}</div>
+                      <div style={styles.rowMeta}>
+                        {o.status ?? "PENDING"} • {date}
                       </div>
                     </div>
-                    <span className="my-orders__badge">{total}</span>
+                    <div style={styles.badge}>{formatEur(total)}</div>
                   </button>
                 );
               })}
-
-              {loading && <div className="my-orders__empty">Chargement...</div>}
-              {!loading && filtered.length === 0 && (
-                <div className="my-orders__empty">Aucune commande pour le moment.</div>
-              )}
             </div>
-          </div>
+          </section>
 
-          <div className="my-orders__panel">
+          <section style={styles.panel}>
             {!selected ? (
-              <div className="my-orders__empty">Selectionne une commande.</div>
+              <div style={styles.empty}>Sélectionne une commande.</div>
             ) : (
-              <>
-                <div className="my-orders__detail-head">
-                  <div>
-                    <h2>Commande #{selected.id}</h2>
-                    <p className="my-orders__muted">
-                      Statut: <strong>{selected.status ?? "PENDING"}</strong>
-                    </p>
+              <div>
+                <div style={styles.detailHead}>
+                  <h2 style={styles.h2}>Commande {selected.id}</h2>
+                  <div style={styles.badge}>{formatEur(selected.totalPrice ?? selected.total)}</div>
+                </div>
+
+                <div style={styles.kvGrid}>
+                  <div style={styles.kv}>
+                    <div style={styles.k}>Statut</div>
+                    <div style={styles.v}>{selected.status ?? "PENDING"}</div>
                   </div>
-                  <div className="my-orders__total">
-                    <span>Total</span>
-                    <strong>{formatEur(selected.totalPrice ?? selected.total)}</strong>
+                  <div style={styles.kv}>
+                    <div style={styles.k}>Date</div>
+                    <div style={styles.v}>{selected.orderDate ?? selected.createdAt ?? "N/A"}</div>
+                  </div>
+                  <div style={styles.kv}>
+                    <div style={styles.k}>Adresse</div>
+                    <div style={styles.v}>{selected.shippingAddress ?? "N/A"}</div>
+                  </div>
+                  <div style={styles.kv}>
+                    <div style={styles.k}>Articles</div>
+                    <div style={styles.v}>
+                      {Array.isArray(selected.items) ? selected.items.length : 0}
+                    </div>
                   </div>
                 </div>
 
-                <div className="my-orders__info">
-                  <div>
-                    <span>Date</span>
-                    <strong>{selected.orderDate ?? selected.createdAt ?? "N/A"}</strong>
-                  </div>
-                  <div>
-                    <span>Adresse</span>
-                    <strong>{selected.shippingAddress ?? "N/A"}</strong>
-                  </div>
-                </div>
-
-                <h3>Articles</h3>
+                <h3 style={styles.h3}>Articles</h3>
                 {Array.isArray(selected.items) && selected.items.length > 0 ? (
-                  <div className="my-orders__items">
+                  <div style={styles.items}>
                     {selected.items.map((it, idx) => {
                       const qty = Number(it.quantity ?? 1);
                       const unit = Number(it.unitPrice ?? it.price ?? 0);
                       const name = it.perfume?.name ?? it.name ?? "Parfum";
                       const brand = it.perfume?.brand ?? it.brand ?? "";
                       return (
-                        <div key={it.id ?? idx} className="my-orders__item">
+                        <div key={it.id ?? idx} style={styles.item}>
                           <div>
-                            <div className="my-orders__item-name">{name}</div>
-                            {brand && <div className="my-orders__item-brand">{brand}</div>}
+                            <div style={styles.itemName}>{name}</div>
+                            {brand && <div style={styles.rowMeta}>{brand}</div>}
                           </div>
-                          <div className="my-orders__item-meta">
-                            <span>x{qty}</span>
-                            <span>{formatEur(unit * qty)}</span>
+                          <div style={styles.itemMeta}>
+                            <div>x{qty}</div>
+                            <div>{formatEur(unit * qty)}</div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <div className="my-orders__empty">Aucun article.</div>
+                  <div style={styles.empty}>Aucun article.</div>
                 )}
-              </>
+              </div>
             )}
-          </div>
+          </section>
         </div>
       </div>
     </div>
   );
 }
 
-const styles = `
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600&display=swap');
-
-.my-orders {
-  --ink: #1c1916;
-  --muted: #6f655c;
-  min-height: 100vh;
-  padding: 56px 20px 80px;
-  background:
-    radial-gradient(circle at 12% 15%, rgba(255, 177, 136, 0.35), transparent 48%),
-    radial-gradient(circle at 88% 18%, rgba(255, 107, 107, 0.18), transparent 52%),
-    radial-gradient(circle at 50% 80%, rgba(255, 215, 194, 0.6), transparent 55%),
-    #fffaf6;
-  font-family: "Manrope", "Segoe UI", sans-serif;
-  color: var(--ink);
-}
-
-.my-orders__wrap {
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.my-orders__header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-
-.my-orders__header h1 {
-  font-family: "Fraunces", "Times New Roman", serif;
-  margin: 0 0 6px;
-}
-
-.my-orders__header p {
-  margin: 0;
-  color: var(--muted);
-}
-
-.my-orders__ghost {
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 107, 107, 0.4);
-  background: #fff;
-  color: #b33a2b;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.my-orders__layout {
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 18px;
-}
-
-.my-orders__panel {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 18px;
-  padding: 16px;
-  border: 1px solid rgba(255, 176, 136, 0.2);
-  box-shadow: 0 14px 32px rgba(25, 15, 10, 0.1);
-}
-
-.my-orders__list {
-  display: grid;
-  gap: 10px;
-}
-
-.my-orders__row {
-  border: 1px solid rgba(28, 25, 22, 0.1);
-  border-radius: 14px;
-  padding: 12px;
-  background: #fff;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  cursor: pointer;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
-  text-align: left;
-}
-
-.my-orders__row:hover {
-  box-shadow: 0 12px 22px rgba(25, 15, 10, 0.08);
-}
-
-.my-orders__row--active {
-  border: 2px solid rgba(255, 107, 107, 0.35);
-  box-shadow: 0 12px 24px rgba(255, 107, 107, 0.16);
-}
-
-.my-orders__row-title {
-  font-weight: 700;
-}
-
-.my-orders__row-meta {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-.my-orders__badge {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255, 107, 107, 0.12);
-  font-weight: 700;
-  color: #b33a2b;
-  font-size: 12px;
-  height: fit-content;
-}
-
-.my-orders__detail-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.my-orders__detail-head h2 {
-  margin: 0 0 6px;
-}
-
-.my-orders__muted {
-  margin: 0;
-  color: var(--muted);
-}
-
-.my-orders__total {
-  text-align: right;
-  background: rgba(255, 107, 107, 0.12);
-  padding: 10px 12px;
-  border-radius: 12px;
-  font-weight: 700;
-}
-
-.my-orders__total span {
-  display: block;
-  font-size: 12px;
-  color: #b33a2b;
-}
-
-.my-orders__info {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin: 16px 0;
-}
-
-.my-orders__info span {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.my-orders__info strong {
-  display: block;
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-.my-orders__items {
-  display: grid;
-  gap: 10px;
-}
-
-.my-orders__item {
-  border: 1px solid rgba(28, 25, 22, 0.08);
-  border-radius: 14px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.85);
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.my-orders__item-name {
-  font-weight: 700;
-}
-
-.my-orders__item-brand {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.my-orders__item-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-end;
-  font-weight: 700;
-}
-
-.my-orders__empty {
-  color: var(--muted);
-  font-weight: 600;
-  padding: 12px;
-}
-
-.my-orders__error {
-  margin-bottom: 12px;
-  background: rgba(255, 107, 107, 0.12);
-  border: 1px solid rgba(255, 107, 107, 0.25);
-  color: #b33a2b;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: 700;
-}
-
-.my-orders__card {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 18px;
-  padding: 20px;
-  border: 1px solid rgba(255, 176, 136, 0.2);
-  box-shadow: 0 14px 32px rgba(25, 15, 10, 0.1);
-  max-width: 520px;
-  margin: 40px auto;
-  text-align: center;
-}
-
-.my-orders__button {
-  display: inline-block;
-  margin-top: 12px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: linear-gradient(120deg, #ff6b6b, #ffb088);
-  color: #1c1916;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-@media (max-width: 900px) {
-  .my-orders__layout {
-    grid-template-columns: 1fr;
-  }
-}
-`;
+const styles = {
+  page: {
+    minHeight: "100vh",
+    padding: "56px 20px 80px",
+    background:
+      "radial-gradient(circle at 12% 15%, rgba(255, 177, 136, 0.35), transparent 48%)," +
+      "radial-gradient(circle at 88% 18%, rgba(255, 107, 107, 0.18), transparent 52%)," +
+      "radial-gradient(circle at 50% 80%, rgba(255, 215, 194, 0.6), transparent 55%)," +
+      "#fffaf6",
+    fontFamily: "Manrope, Segoe UI, sans-serif",
+    color: "#1c1916",
+  },
+  wrap: { maxWidth: 1100, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 },
+  card: {
+    background: "rgba(255,255,255,0.9)",
+    borderRadius: 18,
+    padding: 20,
+    border: "1px solid rgba(255, 176, 136, 0.2)",
+    boxShadow: "0 14px 32px rgba(25,15,10,0.10)",
+    maxWidth: 520,
+    margin: "40px auto",
+    textAlign: "center",
+  },
+  h1: { margin: 0, fontFamily: "Fraunces, Times New Roman, serif", fontSize: 34, fontWeight: 800 },
+  h2: { margin: 0, fontSize: 20, fontWeight: 900 },
+  h3: { margin: "16px 0 10px", fontSize: 16, fontWeight: 900 },
+  muted: { margin: "6px 0 0", color: "#6f655c", fontWeight: 700 },
+  primaryLink: {
+    display: "inline-block",
+    marginTop: 12,
+    padding: "10px 16px",
+    borderRadius: 999,
+    background: "linear-gradient(120deg, #ff6b6b, #ffb088)",
+    color: "#1c1916",
+    fontWeight: 900,
+    textDecoration: "none",
+  },
+  ghostBtn: {
+    padding: "10px 16px",
+    borderRadius: 999,
+    border: "1px solid rgba(255, 107, 107, 0.4)",
+    background: "#fff",
+    color: "#b33a2b",
+    fontWeight: 800,
+    cursor: "pointer",
+    height: "fit-content",
+  },
+  error: {
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 12,
+    background: "rgba(255,107,107,0.12)",
+    border: "1px solid rgba(255,107,107,0.25)",
+    color: "#b33a2b",
+    fontWeight: 800,
+  },
+  layout: { display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: 18 },
+  panel: {
+    background: "rgba(255,255,255,0.9)",
+    borderRadius: 18,
+    padding: 16,
+    border: "1px solid rgba(255, 176, 136, 0.2)",
+    boxShadow: "0 14px 32px rgba(25,15,10,0.10)",
+  },
+  list: { display: "grid", gap: 10, marginTop: 12 },
+  row: {
+    width: "100%",
+    textAlign: "left",
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: 12,
+    borderRadius: 14,
+    border: "1px solid rgba(28, 25, 22, 0.1)",
+    background: "#fff",
+    cursor: "pointer",
+  },
+  rowActive: {
+    border: "2px solid rgba(255, 107, 107, 0.35)",
+    boxShadow: "0 12px 24px rgba(255, 107, 107, 0.16)",
+  },
+  rowTitle: { fontWeight: 800 },
+  rowMeta: { marginTop: 4, color: "#6f655c", fontSize: 12, fontWeight: 700 },
+  badge: {
+    padding: "6px 10px",
+    borderRadius: 999,
+    background: "rgba(255, 107, 107, 0.12)",
+    color: "#b33a2b",
+    fontWeight: 900,
+    fontSize: 12,
+    height: "fit-content",
+    whiteSpace: "nowrap",
+  },
+  detailHead: { display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" },
+  kvGrid: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 14 },
+  kv: { border: "1px solid rgba(28, 25, 22, 0.08)", background: "rgba(255,255,255,0.75)", borderRadius: 14, padding: 12 },
+  k: { color: "#6f655c", fontWeight: 800, fontSize: 12 },
+  v: { marginTop: 4, fontWeight: 900 },
+  items: { display: "grid", gap: 10 },
+  item: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 10,
+    padding: 12,
+    borderRadius: 14,
+    border: "1px solid rgba(28, 25, 22, 0.08)",
+    background: "rgba(255,255,255,0.85)",
+  },
+  itemName: { fontWeight: 900 },
+  itemMeta: { display: "grid", gap: 6, textAlign: "right", fontWeight: 900 },
+  empty: { color: "#6f655c", fontWeight: 800, padding: 12 },
+};

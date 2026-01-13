@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { encodeBasicAuth, getAuthHeaders } from "../services/auth";
 
-const API = "http://localhost:8080/starter/api/users";
-const LOGIN_URL = "http://localhost:8080/starter/api/auth/login";
+import { updateMyProfile, changeMyPassword } from "../application/useCases/user";
 
 const getStoredUser = () => {
   try {
@@ -59,12 +57,6 @@ export default function MyProfilePage() {
       return;
     }
 
-    const authHeaders = getAuthHeaders();
-    if (!authHeaders.Authorization) {
-      setProfileError("Reconnecte-toi pour modifier ton profil.");
-      return;
-    }
-
     const payload = buildProfilePayload();
     if (!payload.firstName || !payload.lastName || !payload.phone) {
       setProfileError("Prenom, nom et telephone sont obligatoires.");
@@ -73,24 +65,7 @@ export default function MyProfilePage() {
 
     setProfileLoading(true);
     try {
-      const res = await fetch(`${API}/${user.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeaders,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const msg = await res.text();
-        if (res.status === 401) {
-          throw new Error("Session expiree. Reconnecte-toi.");
-        }
-        throw new Error(msg || `HTTP ${res.status}`);
-      }
-
-      const updated = await res.json();
+      const updated = await updateMyProfile(user.id, payload);
       updateLocalUser(updated);
       setProfileSuccess("Profil mis a jour.");
     } catch (err) {
@@ -114,44 +89,16 @@ export default function MyProfilePage() {
       return;
     }
 
-    const authHeaders = getAuthHeaders();
-    if (!authHeaders.Authorization) {
-      setPasswordError("Reconnecte-toi pour modifier ton mot de passe.");
-      return;
-    }
-
     setPasswordLoading(true);
     try {
-      const check = await fetch(LOGIN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, password: oldPassword }),
-      });
-      if (!check.ok) {
-        throw new Error("Ancien mot de passe incorrect.");
-      }
-
-      const res = await fetch(`${API}/${user.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeaders,
-        },
-        body: JSON.stringify({ password: newPassword }),
+      const updated = await changeMyPassword({
+        userId: user.id,
+        email: user.email,
+        oldPassword,
+        newPassword,
       });
 
-      if (!res.ok) {
-        const msg = await res.text();
-        if (res.status === 401) {
-          throw new Error("Session expiree. Reconnecte-toi.");
-        }
-        throw new Error(msg || `HTTP ${res.status}`);
-      }
-
-      const updated = await res.json();
       updateLocalUser(updated);
-      const authValue = encodeBasicAuth(updated.email || user.email, newPassword);
-      localStorage.setItem("auth", authValue);
       setOldPassword("");
       setNewPassword("");
       setPasswordSuccess("Mot de passe mis a jour.");
@@ -249,11 +196,7 @@ export default function MyProfilePage() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="my-profile__primary"
-                disabled={profileLoading}
-              >
+              <button type="submit" className="my-profile__primary" disabled={profileLoading}>
                 {profileLoading ? "Enregistrement..." : "Sauvegarder"}
               </button>
             </form>
@@ -292,11 +235,7 @@ export default function MyProfilePage() {
                 />
               </div>
 
-              <button
-                type="submit"
-                className="my-profile__primary"
-                disabled={passwordLoading}
-              >
+              <button type="submit" className="my-profile__primary" disabled={passwordLoading}>
                 {passwordLoading ? "Mise a jour..." : "Mettre a jour"}
               </button>
             </form>
@@ -324,10 +263,7 @@ const styles = `
   color: var(--ink);
 }
 
-.my-profile__wrap {
-  max-width: 1100px;
-  margin: 0 auto;
-}
+.my-profile__wrap { max-width: 1100px; margin: 0 auto; }
 
 .my-profile__header {
   display: flex;
@@ -342,19 +278,11 @@ const styles = `
   margin: 0 0 6px;
 }
 
-.my-profile__header p {
-  margin: 0;
-  color: var(--muted);
-}
+.my-profile__header p { margin: 0; color: var(--muted); }
 
-.my-profile__identity {
-  text-align: right;
-}
+.my-profile__identity { text-align: right; }
 
-.my-profile__email {
-  font-weight: 700;
-  margin-top: 6px;
-}
+.my-profile__email { font-weight: 700; margin-top: 6px; }
 
 .my-profile__pill {
   display: inline-flex;
@@ -390,19 +318,10 @@ const styles = `
   margin-bottom: 12px;
 }
 
-.my-profile__panel-head h2 {
-  margin: 0 0 6px;
-}
+.my-profile__panel-head h2 { margin: 0 0 6px; }
+.my-profile__panel-head p { margin: 0; color: var(--muted); }
 
-.my-profile__panel-head p {
-  margin: 0;
-  color: var(--muted);
-}
-
-.my-profile__form {
-  display: grid;
-  gap: 12px;
-}
+.my-profile__form { display: grid; gap: 12px; }
 
 .my-profile__grid {
   display: grid;
@@ -438,10 +357,7 @@ const styles = `
   cursor: pointer;
 }
 
-.my-profile__primary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
+.my-profile__primary:disabled { opacity: 0.7; cursor: not-allowed; }
 
 .my-profile__error {
   margin-bottom: 12px;
@@ -486,17 +402,11 @@ const styles = `
 }
 
 @media (max-width: 900px) {
-  .my-profile__layout {
-    grid-template-columns: 1fr;
-  }
+  .my-profile__layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
-  .my-profile__grid {
-    grid-template-columns: 1fr;
-  }
-  .my-profile__identity {
-    text-align: left;
-  }
+  .my-profile__grid { grid-template-columns: 1fr; }
+  .my-profile__identity { text-align: left; }
 }
 `;

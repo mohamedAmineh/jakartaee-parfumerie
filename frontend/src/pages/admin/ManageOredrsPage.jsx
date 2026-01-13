@@ -1,58 +1,53 @@
 import { useEffect, useMemo, useState } from "react";
-import { getAuthHeaders } from "../../services/auth";
+import { Link } from "react-router-dom";
+import { fetchAllOrders, fetchHighValueOrderIds, updateOrderStatus } from "../../application/useCases/ordersAdmin";
 
-const API = "http://localhost:8080/starter/api/orders";
 const HIGH_VALUE_THRESHOLD = 500;
-const HIGH_VALUE_API = "http://localhost:8080/starter/api/orders/high-value";
-const STATUS_OPTIONS = [
-  "PENDING",
-  "PAID",
-  "PROCESSING",
-  "SHIPPED",
-  "DELIVERED",
-  "CANCELLED",
-];
 
+const STATUS_OPTIONS = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
+
+const formatEur = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "-";
+  return `${n.toLocaleString("fr-FR")} €`;
+};
+
+function computeOrderTotal(order) {
+  const total = order?.totalPrice ?? order?.total;
+  if (total != null && total !== "") return Number(total);
+
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const sum = items.reduce((acc, it) => {
+    const qty = Number(it?.quantity ?? 0);
+    const unit = Number(it?.unitPrice ?? it?.price ?? 0);
+    return acc + qty * unit;
+  }, 0);
+
+  return Number.isFinite(sum) ? sum : null;
+}
 
 export default function ManageOredrsPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState(null);
   const [highValueIds, setHighValueIds] = useState(new Set());
 
   useEffect(() => {
     refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function refresh() {
     setLoading(true);
     setError(null);
+
     try {
-      const ordersRes = await fetch(API);
-      if (!ordersRes.ok) {
-        const txt = await ordersRes.text();
-        throw new Error(txt || `HTTP ${ordersRes.status}`);
-      }
-
-      const orders = await ordersRes.json();
-      setData(Array.isArray(orders) ? orders : []);
-
-      const highValueRes = await fetch(HIGH_VALUE_API);
-      if (highValueRes && highValueRes.ok) {
-        const events = await highValueRes.json();
-        const ids = new Set(
-          Array.isArray(events)
-            ? events
-                .map((e) => e.orderId ?? e.id)
-                .filter((id) => id !== null && id !== undefined)
-            : []
-        );
-        setHighValueIds(ids);
-      } else {
-        setHighValueIds(new Set());
-      }
+      const [orders, hvIds] = await Promise.all([fetchAllOrders(), fetchHighValueOrderIds()]);
+      setData(orders);
+      setHighValueIds(hvIds);
     } catch (err) {
       setError(err?.message || "Erreur lors du chargement.");
     } finally {
@@ -60,21 +55,14 @@ export default function ManageOredrsPage() {
     }
   }
 
-  async function updateStatus(orderId, status) {
+  async function onSaveStatus() {
+    if (!selected) return;
     setLoading(true);
     setError(null);
+
     try {
-      const res = await fetch(`${API}/${orderId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ status }),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `HTTP ${res.status}`);
-      }
-      const updated = await res.json();
-      setData((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+      const updated = await updateOrderStatus(selected.id, selected.status ?? "PENDING");
+      setData((prev) => prev.map((o) => (o.id === selected.id ? updated : o)));
       setSelected(updated);
     } catch (err) {
       setError(err?.message || "Erreur lors de la mise a jour.");
@@ -97,160 +85,153 @@ export default function ManageOredrsPage() {
     if (!selected) return;
     const stillThere = data.find((o) => o.id === selected.id);
     setSelected(stillThere || null);
-  }, [data]);
+  }, [data]); // volontairement sans selected (sinon boucle)
+
+  const selectedTotal = useMemo(() => computeOrderTotal(selected), [selected]);
+
+  const selectedIsHighValue = useMemo(() => {
+    if (!selected) return false;
+    const byEndpoint = highValueIds.has(selected.id);
+    const byThreshold = selectedTotal != null && Number(selectedTotal) >= HIGH_VALUE_THRESHOLD;
+    return byEndpoint || byThreshold;
+  }, [selected, highValueIds, selectedTotal]);
 
   return (
-    <div style={styles.page}>
-      <div style={styles.topBar}>
-        <div>
-          <h1 style={styles.h1}>Gestion des commandes</h1>
-          <p style={styles.p}>
-            Liste + détails (comme la page catalogue). Badge rouge si routé en high
-            value.
-          </p>
-        </div>
+    <div className="admin-orders">
+      <style>{css}</style>
 
-        <button onClick={refresh} style={styles.btn} disabled={loading}>
-          {loading ? "Chargement..." : "Rafraîchir"}
-        </button>
-      </div>
-
-      {error && <div style={styles.alert}>Erreur: {error}</div>}
-
-      <div style={styles.grid}>
-        {/* LISTE */}
-        <div style={styles.card}>
-          <input
-            style={styles.input}
-            placeholder="Rechercher (id, email, statut)..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
-
-          <div style={styles.list}>
-            {filtered.map((o) => {
-              const isActive = selected?.id === o.id;
-              const total =
-                o.totalPrice != null
-                  ? `${o.totalPrice} €`
-                  : o.total != null
-                    ? `${o.total} €`
-                    : "—";
-              const numericTotal =
-                o.totalPrice ?? o.total ?? (Array.isArray(o.items)
-                  ? o.items.reduce(
-                      (acc, it) =>
-                        acc +
-                        Number(it.quantity ?? 0) *
-                          Number(it.unitPrice ?? it.price ?? 0),
-                      0
-                    )
-                  : null);
-
-              const isHighValue =
-                highValueIds.has(o.id) ||
-                (numericTotal != null && Number(numericTotal) >= HIGH_VALUE_THRESHOLD);
-
-              return (
-                <button
-                  key={o.id}
-                  type="button"
-                  onClick={() => setSelected(o)}
-                  style={{ ...styles.row, ...(isActive ? styles.rowActive : {}) }}
-                >
-                  <div style={styles.rowLine1}>
-                    <span style={styles.rowTitle}>Commande #{o.id}</span>
-                    <span style={styles.rowMeta}>{o.status ?? "—"}</span>
-                    {isHighValue && <span style={styles.badgeDanger}>HIGH VALUE</span>}
-                  </div>
-
-                  <div style={styles.rowLine2}>
-                    <span style={styles.rowMeta}>
-                      {o.user?.email ?? o.userEmail ?? "Client inconnu"}
-                    </span>
-                    <span style={styles.rowMeta}>{total}</span>
-                  </div>
-                </button>
-              );
-            })}
-
-            {loading && <div style={styles.empty}>Chargement...</div>}
-
-            {!loading && filtered.length === 0 && (
-              <div style={styles.empty}>Aucune commande trouvée.</div>
-            )}
+      <div className="admin-orders__wrap">
+        <header className="admin-orders__header">
+          <div>
+            <p className="admin-orders__eyebrow">Espace admin</p>
+            <h1 className="admin-orders__title">Gestion des commandes</h1>
+            <p className="admin-orders__subtitle">
+              Liste + détails (comme la page catalogue). Badge rouge si “high value”.
+            </p>
           </div>
-        </div>
 
-        {/* DETAILS */}
-        <div style={styles.card}>
-          {!selected ? (
-            <div style={styles.empty}>Sélectionne une commande dans la liste.</div>
-          ) : (
-            <div>
-              <div style={styles.detailsHeader}>
-                <div>
-                  <h2 style={styles.detailsTitle}>Commande #{selected.id}</h2>
-                  <div style={styles.detailsSub}>
-                    <span style={styles.badge}>{selected.status ?? "—"}</span>
-                    <span style={styles.muted}>
-                      {selected.orderDate ?? selected.createdAt ?? "Date: —"}
-                    </span>
-                    {(highValueIds.has(selected.id) ||
-                      Number(selected.totalPrice ?? selected.total ?? 0) >=
-                        HIGH_VALUE_THRESHOLD) && (
-                      <span style={styles.badgeDanger}>HIGH VALUE</span>
-                    )}
+          <div className="admin-orders__header-actions">
+            <Link to="/admin" className="admin-orders__ghost">
+              Retour
+            </Link>
+            <button type="button" className="admin-orders__btn" onClick={refresh} disabled={loading}>
+              {loading ? "Chargement..." : "Rafraîchir"}
+            </button>
+          </div>
+        </header>
+
+        {error && <div className="admin-orders__alert">Erreur: {error}</div>}
+
+        <div className="admin-orders__grid">
+          {/* LISTE */}
+          <div className="admin-orders__card">
+            <input
+              className="admin-orders__input"
+              placeholder="Rechercher (id, email, statut)..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+
+            {loading && <div className="admin-orders__empty">Chargement...</div>}
+            {!loading && filtered.length === 0 && (
+              <div className="admin-orders__empty">Aucune commande trouvée.</div>
+            )}
+
+            <div className="admin-orders__list">
+              {!loading &&
+                filtered.map((o) => {
+                  const isActive = selected?.id === o.id;
+                  const total = computeOrderTotal(o);
+                  const isHigh =
+                    highValueIds.has(o.id) || (total != null && Number(total) >= HIGH_VALUE_THRESHOLD);
+
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      onClick={() => setSelected(o)}
+                      className={`admin-orders__row ${isActive ? "admin-orders__row--active" : ""}`}
+                    >
+                      <div className="admin-orders__row-top">
+                        <span className="admin-orders__row-title">Commande #{o.id}</span>
+                        <span className="admin-orders__row-meta">{o.status ?? "—"}</span>
+                      </div>
+
+                      <div className="admin-orders__row-bottom">
+                        <span className="admin-orders__row-meta">
+                          {o.user?.email ?? o.userEmail ?? "Client inconnu"}
+                        </span>
+                        <span className="admin-orders__row-meta">{formatEur(total)}</span>
+                      </div>
+
+                      {isHigh && <span className="admin-orders__badge-danger">HIGH VALUE</span>}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* DETAILS */}
+          <div className="admin-orders__card">
+            {!selected ? (
+              <div className="admin-orders__empty">Sélectionne une commande dans la liste.</div>
+            ) : (
+              <>
+                <div className="admin-orders__details-head">
+                  <div>
+                    <h2 className="admin-orders__details-title">Commande #{selected.id}</h2>
+                    <div className="admin-orders__details-sub">
+                      <span className="admin-orders__badge">{selected.status ?? "PENDING"}</span>
+                      <span className="admin-orders__muted">
+                        Date: {selected.orderDate ?? selected.createdAt ?? "—"}
+                      </span>
+                      {selectedIsHighValue && (
+                        <span className="admin-orders__badge-danger">HIGH VALUE</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="admin-orders__total">
+                    <div className="admin-orders__total-label">Total</div>
+                    <div className="admin-orders__total-value">{formatEur(selectedTotal)}</div>
                   </div>
                 </div>
 
-                <div style={styles.totalBox}>
-                  <div style={styles.totalLabel}>Total</div>
-                  <div style={styles.totalValue}>
-                    {(selected.totalPrice ?? selected.total) != null
-                      ? `${selected.totalPrice ?? selected.total} €`
-                      : "—"}
+                <div className="admin-orders__kv-grid">
+                  <div className="admin-orders__kv">
+                    <div className="admin-orders__kv-label">Client</div>
+                    <div className="admin-orders__kv-value">
+                      {selected.user?.email ?? selected.userEmail ?? "—"}
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <div style={styles.kvGrid}>
-                <div style={styles.kvItem}>
-                  <div style={styles.kvLabel}>Client</div>
-                  <div style={styles.kvValue}>
-                    {selected.user?.email ?? selected.userEmail ?? "—"}
+                  <div className="admin-orders__kv">
+                    <div className="admin-orders__kv-label">ID</div>
+                    <div className="admin-orders__kv-value">{selected.id}</div>
                   </div>
-                </div>
 
-                <div style={styles.kvItem}>
-                  <div style={styles.kvLabel}>ID</div>
-                  <div style={styles.kvValue}>{selected.id}</div>
-                </div>
-
-                <div style={styles.kvItem}>
-                  <div style={styles.kvLabel}>Articles</div>
-                  <div style={styles.kvValue}>
-                    {Array.isArray(selected.items) ? selected.items.length : 0}
+                  <div className="admin-orders__kv">
+                    <div className="admin-orders__kv-label">Articles</div>
+                    <div className="admin-orders__kv-value">
+                      {Array.isArray(selected.items) ? selected.items.length : 0}
+                    </div>
                   </div>
-                </div>
 
-                <div style={styles.kvItem}>
-                  <div style={styles.kvLabel}>Adresse</div>
-                  <div style={styles.kvValue}>
-                    {selected.shippingAddress ?? "—"}
+                  <div className="admin-orders__kv">
+                    <div className="admin-orders__kv-label">Adresse</div>
+                    <div className="admin-orders__kv-value">{selected.shippingAddress ?? "—"}</div>
                   </div>
-                </div>
-                <div style={styles.kvItem}>
-                  <div style={styles.kvLabel}>Statut</div>
-                  <div style={styles.kvValue}>
-                    <div style={styles.statusRow}>
+
+                  <div className="admin-orders__kv admin-orders__kv--full">
+                    <div className="admin-orders__kv-label">Statut</div>
+                    <div className="admin-orders__status-row">
                       <select
+                        className="admin-orders__select"
                         value={selected.status ?? "PENDING"}
-                        onChange={(e) => {
-                          const next = { ...selected, status: e.target.value };
-                          setSelected(next);
-                        }}
-                        style={styles.select}
+                        onChange={(e) =>
+                          setSelected((s) => (s ? { ...s, status: e.target.value } : s))
+                        }
+                        disabled={loading}
                       >
                         {STATUS_OPTIONS.map((opt) => (
                           <option key={opt} value={opt}>
@@ -258,244 +239,488 @@ export default function ManageOredrsPage() {
                           </option>
                         ))}
                       </select>
+
                       <button
                         type="button"
-                        style={styles.btn}
-                        onClick={() => updateStatus(selected.id, selected.status ?? "PENDING")}
+                        className="admin-orders__btn admin-orders__btn--ghost"
+                        onClick={onSaveStatus}
                         disabled={loading}
                       >
-                        Enregistrer
+                        {loading ? "..." : "Enregistrer"}
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <h3 style={styles.sectionTitle}>Articles</h3>
+                <h3 className="admin-orders__section-title">Articles</h3>
 
-              {Array.isArray(selected.items) && selected.items.length > 0 ? (
-                <div style={styles.itemsGrid}>
-                  {selected.items.map((it, idx) => {
-                    const qty = Number(it.quantity ?? 1);
-                    const unit =
-                      it.unitPrice != null
-                        ? Number(it.unitPrice)
-                        : it.price != null
-                          ? Number(it.price)
-                          : null;
+                {Array.isArray(selected.items) && selected.items.length > 0 ? (
+                  <div className="admin-orders__items">
+                    {selected.items.map((it, idx) => {
+                      const qty = Number(it.quantity ?? 1);
+                      const unit =
+                        it.unitPrice != null ? Number(it.unitPrice) : it.price != null ? Number(it.price) : null;
 
-                    return (
-                      <div key={it.id ?? idx} style={styles.itemCard}>
-                        <div style={styles.itemCardTop}>
-                          <div style={styles.itemName}>
-                            {it.perfume?.name ?? it.name ?? "Parfum"}
+                      const name = it.perfume?.name ?? it.name ?? "Parfum";
+
+                      const sub = unit != null ? unit * qty : null;
+
+                      return (
+                        <div className="admin-orders__item" key={it.id ?? idx}>
+                          <div className="admin-orders__item-top">
+                            <div className="admin-orders__item-name">{name}</div>
+                            <div className="admin-orders__item-chip">x{qty}</div>
                           </div>
-                          <div style={styles.itemChip}>x{qty}</div>
-                        </div>
 
-                        <div style={styles.itemMetaRow}>
-                          <span style={styles.muted}>Prix unitaire</span>
-                          <span style={styles.itemPrice}>
-                            {unit != null ? `${unit} €` : "—"}
-                          </span>
-                        </div>
+                          <div className="admin-orders__item-row">
+                            <span className="admin-orders__muted">Prix unitaire</span>
+                            <span className="admin-orders__item-price">{formatEur(unit)}</span>
+                          </div>
 
-                        <div style={styles.itemMetaRow}>
-                          <span style={styles.muted}>Sous-total</span>
-                          <span style={styles.itemPrice}>
-                            {unit != null ? `${unit * qty} €` : "—"}
-                          </span>
+                          <div className="admin-orders__item-row">
+                            <span className="admin-orders__muted">Sous-total</span>
+                            <span className="admin-orders__item-price">{formatEur(sub)}</span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div style={styles.empty}>Aucun article pour cette commande.</div>
-              )}
-            </div>
-          )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="admin-orders__empty">Aucun article pour cette commande.</div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-const styles = {
-  page: { padding: 24, maxWidth: 1200, margin: "0 auto" },
+/* =======================
+   CSS (inline)
+   ======================= */
+const css = `
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap');
 
-  topBar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
-    marginBottom: 14,
-  },
-  h1: { margin: 0, fontSize: 30, color: "#1c1916" },
-  p: { margin: "6px 0 0", color: "#6f655c", fontWeight: 600 },
+.admin-orders{
+  --cream:#fff6ef;
+  --peach:#ffd7c2;
+  --apricot:#ffb088;
+  --coral:#ff6b6b;
+  --ink:#1c1916;
+  --muted:#6f655c;
+  --glass: rgba(255,255,255,0.88);
 
-  btn: {
-    padding: "10px 14px",
-    borderRadius: 12,
-    border: "1px solid rgba(255,107,107,0.35)",
-    background: "#fff",
-    color: "#b33a2b",
-    fontWeight: 800,
-    cursor: "pointer",
-  },
+  min-height:100vh;
+  padding:56px 20px 80px;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255,177,136,0.35), transparent 45%),
+    radial-gradient(circle at 88% 18%, rgba(255,107,107,0.20), transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(255,215,194,0.60), transparent 55%),
+    #fffaf6;
+  position:relative;
+  overflow:hidden;
+  font-family:"Manrope","Segoe UI",sans-serif;
+  color:var(--ink);
+}
 
-  alert: {
-    marginTop: 10,
-    marginBottom: 12,
-    padding: 12,
-    borderRadius: 14,
-    background: "rgba(255,107,107,0.12)",
-    border: "1px solid rgba(255,107,107,0.25)",
-    color: "#b33a2b",
-    fontWeight: 700,
-  },
+.admin-orders::before,
+.admin-orders::after{
+  content:"";
+  position:absolute;
+  width:260px;
+  height:260px;
+  border-radius:999px;
+  filter: blur(10px);
+  opacity:0.45;
+  animation: float 10s ease-in-out infinite;
+  z-index:0;
+}
 
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "360px 1fr",
-    gap: 16,
-    marginTop: 12,
-  },
+.admin-orders::before{
+  background: rgba(255,176,136,0.6);
+  top:-90px;
+  right:10%;
+}
 
-  card: {
-    background: "rgba(255,255,255,0.9)",
-    border: "1px solid rgba(28,25,22,0.08)",
-    borderRadius: 16,
-    padding: 14,
-    boxShadow: "0 12px 26px rgba(25, 15, 10, 0.06)",
-  },
+.admin-orders::after{
+  background: rgba(255,215,194,0.8);
+  bottom:-120px;
+  left:6%;
+  animation-delay:2s;
+}
 
-  input: {
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid rgba(28,25,22,0.12)",
-    marginBottom: 12,
-    outline: "none",
-  },
+.admin-orders__wrap{
+  position:relative;
+  z-index:1;
+  max-width:1200px;
+  margin:0 auto;
+}
 
-  list: { display: "grid", gap: 10 },
+.admin-orders__header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
 
-  row: {
-    textAlign: "left",
-    width: "100%",
-    padding: 12,
-    borderRadius: 14,
-    border: "1px solid rgba(28,25,22,0.08)",
-    background: "rgba(255,255,255,0.75)",
-    cursor: "pointer",
-  },
-  rowActive: {
-    border: "1px solid rgba(255,107,107,0.35)",
-    background: "rgba(255, 107, 107, 0.10)",
-  },
-  rowLine1: { display: "flex", justifyContent: "space-between", gap: 10 },
-  rowLine2: { display: "flex", justifyContent: "space-between", gap: 10, marginTop: 6 },
-  rowTitle: { fontWeight: 900, color: "#1c1916" },
-  rowMeta: { color: "#6f655c", fontWeight: 600, fontSize: 13 },
+.admin-orders__eyebrow{
+  text-transform:uppercase;
+  letter-spacing:0.18em;
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+  margin:0 0 6px;
+}
 
-  empty: { color: "#6f655c", fontWeight: 700, padding: 8 },
+.admin-orders__title{
+  font-family:"Fraunces","Times New Roman",serif;
+  font-size: clamp(30px, 4vw, 42px);
+  margin:0 0 8px;
+}
 
-  muted: { color: "#6f655c", fontWeight: 700, fontSize: 13 },
+.admin-orders__subtitle{
+  margin:0;
+  color:var(--muted);
+  font-weight:600;
+}
 
-  detailsHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  detailsTitle: { margin: 0, fontSize: 22, fontWeight: 900, color: "#1c1916" },
-  detailsSub: { display: "flex", gap: 10, alignItems: "center", marginTop: 6 },
+.admin-orders__header-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
 
-  badge: {
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(255,107,107,0.30)",
-    background: "rgba(255,107,107,0.10)",
-    color: "#b33a2b",
-    fontWeight: 900,
-    fontSize: 12,
-    letterSpacing: 0.2,
-  },
-  badgeDanger: {
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(255,0,0,0.25)",
-    background: "rgba(255,0,0,0.10)",
-    color: "#d12b23",
-    fontWeight: 900,
-    fontSize: 12,
-    letterSpacing: 0.2,
-  },
+.admin-orders__btn{
+  padding:10px 16px;
+  border-radius:999px;
+  border:none;
+  background: linear-gradient(120deg, #ff6b6b, #ffb088);
+  color:#1c1916;
+  font-weight:800;
+  font-size:14px;
+  box-shadow:0 12px 24px rgba(255,107,107,0.25);
+  cursor:pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-  totalBox: {
-    minWidth: 140,
-    textAlign: "right",
-    padding: "10px 12px",
-    borderRadius: 14,
-    border: "1px solid rgba(28,25,22,0.08)",
-    background: "rgba(255,255,255,0.75)",
-  },
-  totalLabel: { color: "#6f655c", fontWeight: 800, fontSize: 12 },
-  totalValue: { color: "#1c1916", fontWeight: 900, fontSize: 20, marginTop: 2 },
+.admin-orders__btn:hover{
+  transform: translateY(-1px);
+  box-shadow:0 14px 28px rgba(255,107,107,0.30);
+}
 
-  kvGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 10,
-    marginBottom: 10,
-  },
-  kvItem: {
-    border: "1px solid rgba(28,25,22,0.08)",
-    background: "rgba(255,255,255,0.75)",
-    borderRadius: 14,
-    padding: 12,
-  },
-  kvLabel: { color: "#6f655c", fontWeight: 800, fontSize: 12 },
-  kvValue: { color: "#1c1916", fontWeight: 900, marginTop: 4 },
+.admin-orders__btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+  box-shadow:none;
+}
 
-  sectionTitle: { margin: "14px 0 10px", fontSize: 16, fontWeight: 900, color: "#1c1916" },
+.admin-orders__btn--ghost{
+  border:1px solid rgba(255,107,107,0.35);
+  background: rgba(255,255,255,0.9);
+  color:#b33a2b;
+  box-shadow:none;
+}
 
-  itemsGrid: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 },
+.admin-orders__ghost{
+  padding:10px 16px;
+  border-radius:999px;
+  border:1px solid rgba(255,107,107,0.40);
+  background: rgba(255,255,255,0.9);
+  color:#b33a2b;
+  text-decoration:none;
+  font-weight:800;
+}
 
-  itemCard: {
-    border: "1px solid rgba(28,25,22,0.08)",
-    background: "rgba(255,255,255,0.80)",
-    borderRadius: 16,
-    padding: 12,
-  },
-  itemCardTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 10,
-    alignItems: "flex-start",
-  },
-  itemName: { fontWeight: 900, color: "#1c1916" },
-  itemChip: {
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(28,25,22,0.10)",
-    background: "rgba(255,255,255,0.9)",
-    fontWeight: 900,
-    color: "#1c1916",
-    fontSize: 12,
-  },
-  itemMetaRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 8,
-  },
-  itemPrice: { fontWeight: 900, color: "#1c1916" },
-};
+.admin-orders__alert{
+  margin:12px 0 14px;
+  padding:12px 14px;
+  border-radius:14px;
+  background: rgba(255,107,107,0.12);
+  border: 1px solid rgba(255,107,107,0.25);
+  color:#b33a2b;
+  font-weight:800;
+}
+
+.admin-orders__grid{
+  display:grid;
+  grid-template-columns: 340px 1fr;
+  gap:16px;
+}
+
+@media (max-width: 980px){
+  .admin-orders__grid{ grid-template-columns: 1fr; }
+}
+
+.admin-orders__card{
+  background: var(--glass);
+  border-radius: 18px;
+  padding: 14px;
+  border: 1px solid rgba(255,176,136,0.22);
+  box-shadow: 0 16px 36px rgba(25,15,10,0.10);
+}
+
+.admin-orders__input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(28,25,22,0.12);
+  background:#fff;
+  outline:none;
+  font-weight:700;
+}
+
+.admin-orders__input:focus{
+  border-color: rgba(255,107,107,0.7);
+  box-shadow: 0 0 0 4px rgba(255,107,107,0.16);
+}
+
+.admin-orders__list{
+  margin-top:12px;
+  display:grid;
+  gap:10px;
+}
+
+.admin-orders__row{
+  text-align:left;
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(28,25,22,0.08);
+  background: rgba(255,255,255,0.75);
+  cursor:pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border 0.15s ease;
+  position:relative;
+}
+
+.admin-orders__row:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(25,15,10,0.08);
+}
+
+.admin-orders__row--active{
+  border:2px solid rgba(255,107,107,0.35);
+  background: rgba(255,107,107,0.10);
+}
+
+.admin-orders__row-top,
+.admin-orders__row-bottom{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.admin-orders__row-bottom{ margin-top:6px; }
+
+.admin-orders__row-title{
+  font-weight:900;
+  color:var(--ink);
+}
+
+.admin-orders__row-meta{
+  color:var(--muted);
+  font-weight:700;
+  font-size:13px;
+}
+
+.admin-orders__badge{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,107,107,0.30);
+  background: rgba(255,107,107,0.10);
+  color:#b33a2b;
+  font-weight:900;
+  font-size:12px;
+}
+
+.admin-orders__badge-danger{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,0,0,0.25);
+  background: rgba(255,0,0,0.10);
+  color:#d12b23;
+  font-weight:900;
+  font-size:12px;
+  margin-top:10px;
+}
+
+.admin-orders__empty{
+  padding:10px 6px;
+  color:var(--muted);
+  font-weight:800;
+}
+
+.admin-orders__details-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  margin-bottom:12px;
+}
+
+.admin-orders__details-title{
+  margin:0;
+  font-size:22px;
+  font-weight:900;
+  font-family:"Fraunces","Times New Roman",serif;
+}
+
+.admin-orders__details-sub{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-top:6px;
+}
+
+.admin-orders__muted{
+  color:var(--muted);
+  font-weight:700;
+  font-size:13px;
+}
+
+.admin-orders__total{
+  min-width:140px;
+  text-align:right;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(28,25,22,0.08);
+  background: rgba(255,255,255,0.75);
+}
+
+.admin-orders__total-label{
+  color:var(--muted);
+  font-weight:800;
+  font-size:12px;
+}
+
+.admin-orders__total-value{
+  color:var(--ink);
+  font-weight:900;
+  font-size:20px;
+  margin-top:2px;
+}
+
+.admin-orders__kv-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:10px;
+  margin-bottom:10px;
+}
+
+@media (max-width: 980px){
+  .admin-orders__kv-grid{ grid-template-columns: 1fr; }
+}
+
+.admin-orders__kv{
+  border:1px solid rgba(28,25,22,0.08);
+  background: rgba(255,255,255,0.75);
+  border-radius:14px;
+  padding:12px;
+}
+
+.admin-orders__kv--full{
+  grid-column: 1 / -1;
+}
+
+.admin-orders__kv-label{
+  color:var(--muted);
+  font-weight:800;
+  font-size:12px;
+}
+
+.admin-orders__kv-value{
+  color:var(--ink);
+  font-weight:900;
+  margin-top:4px;
+}
+
+.admin-orders__status-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top:8px;
+  flex-wrap:wrap;
+}
+
+.admin-orders__select{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(28,25,22,0.12);
+  background:#fff;
+  font-weight:900;
+}
+
+.admin-orders__section-title{
+  margin:14px 0 10px;
+  font-size:16px;
+  font-weight:900;
+  color:var(--ink);
+  font-family:"Fraunces","Times New Roman",serif;
+}
+
+.admin-orders__items{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:12px;
+}
+
+@media (max-width: 980px){
+  .admin-orders__items{ grid-template-columns: 1fr; }
+}
+
+.admin-orders__item{
+  border:1px solid rgba(28,25,22,0.08);
+  background: rgba(255,255,255,0.80);
+  border-radius:16px;
+  padding:12px;
+}
+
+.admin-orders__item-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+  margin-bottom:6px;
+}
+
+.admin-orders__item-name{
+  font-weight:900;
+  color:var(--ink);
+}
+
+.admin-orders__item-chip{
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(28,25,22,0.10);
+  background: rgba(255,255,255,0.9);
+  font-weight:900;
+  color:var(--ink);
+  font-size:12px;
+}
+
+.admin-orders__item-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:8px;
+}
+
+.admin-orders__item-price{
+  font-weight:900;
+  color:var(--ink);
+}
+
+@keyframes float{
+  0%,100%{ transform: translateY(0px); }
+  50%{ transform: translateY(14px); }
+}
+`;

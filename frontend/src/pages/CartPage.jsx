@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-const ORDERS_API = "http://localhost:8080/starter/api/orders";
+import { 
+  loadCart, 
+  updateItemQuantity, 
+  removeItemFromCart, 
+  computeCartTotal 
+} from "../domain/services/cartService";
+import { createOrderFromCart } from "../application/useCases/CreateOrder";
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -11,68 +16,31 @@ export default function CartPage() {
   const [success, setSuccess] = useState(null);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("cart") || "[]");
-    setItems(stored);
+    setItems(loadCart());
   }, []);
 
-  const total = useMemo(
-    () => items.reduce((sum, it) => sum + Number(it.price || 0) * Number(it.quantity || 1), 0),
-    [items]
-  );
+  const total = useMemo(() => computeCartTotal(items), [items]);
 
   function updateQuantity(id, delta) {
-    setItems((prev) => {
-      const next = prev.map((it) =>
-        it.id === id ? { ...it, quantity: Math.max(1, Number(it.quantity || 1) + delta) } : it
-      );
-      localStorage.setItem("cart", JSON.stringify(next));
-      return next;
-    });
+    const nextItems = updateItemQuantity(items, id, delta);
+    setItems(nextItems);
   }
 
   function removeItem(id) {
-    setItems((prev) => {
-      const next = prev.filter((it) => it.id !== id);
-      localStorage.setItem("cart", JSON.stringify(next));
-      return next;
-    });
+    const nextItems = removeItemFromCart(items, id);
+    setItems(nextItems);
   }
 
   async function confirmOrder() {
     setError(null);
     setSuccess(null);
-    if (items.length === 0) {
-      setError("Panier vide.");
-      return;
-    }
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    if (!user?.id) {
-      setError("Connecte-toi avant de confirmer la commande.");
-      return;
-    }
     setLoading(true);
+
     try {
-      const payload = {
-        userId: user.id,
-        status: "PENDING",
-        items: items.map((it) => ({
-          perfumeId: it.id,
-          quantity: Number(it.quantity || 1),
-          unitPrice: Number(it.price || 0),
-        })),
-      };
-      const res = await fetch(ORDERS_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `HTTP ${res.status}`);
-      }
-      setSuccess("Commande enregistree ! Un admin recevra la notification.");
-      setItems([]);
-      localStorage.removeItem("cart");
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      await createOrderFromCart({ user, items });
+      
+      setSuccess("Commande enregistrée ! Un admin recevra la notification.");
       setTimeout(() => navigate("/products"), 1200);
     } catch (err) {
       setError(err.message);
@@ -89,7 +57,7 @@ export default function CartPage() {
       <div style={styles.wrap}>
         <Link to="/" style={styles.back}>← Retour au catalogue</Link>
         <h1 style={styles.title}>Mon panier</h1>
-        <p style={styles.subtitle}>Confirme ta commande; l’admin verra la notification.</p>
+        <p style={styles.subtitle}>Confirme ta commande; l'admin verra la notification.</p>
 
         <div style={styles.card}>
           {items.length === 0 && <p style={styles.muted}>Panier vide.</p>}
@@ -103,11 +71,26 @@ export default function CartPage() {
               </div>
               <div style={styles.rowActions}>
                 <div style={styles.qty}>
-                  <button onClick={() => updateQuantity(it.id, -1)} style={styles.qtyBtn}>-</button>
+                  <button 
+                    onClick={() => updateQuantity(it.id, -1)} 
+                    style={styles.qtyBtn}
+                  >
+                    -
+                  </button>
                   <span>{it.quantity || 1}</span>
-                  <button onClick={() => updateQuantity(it.id, 1)} style={styles.qtyBtn}>+</button>
+                  <button 
+                    onClick={() => updateQuantity(it.id, 1)} 
+                    style={styles.qtyBtn}
+                  >
+                    +
+                  </button>
                 </div>
-                <button onClick={() => removeItem(it.id)} style={styles.ghost}>Supprimer</button>
+                <button 
+                  onClick={() => removeItem(it.id)} 
+                  style={styles.ghost}
+                >
+                  Supprimer
+                </button>
               </div>
             </div>
           ))}
@@ -117,7 +100,11 @@ export default function CartPage() {
             <strong>{total.toFixed(2)} €</strong>
           </div>
 
-          <button style={styles.primary} onClick={confirmOrder} disabled={loading || items.length === 0}>
+          <button 
+            style={styles.primary} 
+            onClick={confirmOrder} 
+            disabled={loading || items.length === 0}
+          >
             {loading ? "Envoi..." : "Confirmer la commande"}
           </button>
 
@@ -141,8 +128,18 @@ const styles = {
     fontFamily: '"Manrope","Segoe UI",sans-serif',
   },
   wrap: { maxWidth: 900, margin: "0 auto" },
-  back: { display: "inline-block", marginBottom: 12, color: "#b33a2b", fontWeight: 700 },
-  title: { margin: "0 0 6px", fontFamily: '"Fraunces","Times New Roman",serif' },
+  back: { 
+    display: "inline-block", 
+    marginBottom: 12, 
+    color: "#b33a2b", 
+    fontWeight: 700,
+    textDecoration: "none"
+  },
+  title: { 
+    margin: "0 0 6px", 
+    fontFamily: '"Fraunces","Times New Roman",serif',
+    fontSize: 36
+  },
   subtitle: { margin: "0 0 16px", color: "#6f655c" },
   card: {
     background: "rgba(255,255,255,0.9)",
@@ -181,6 +178,8 @@ const styles = {
     fontWeight: 800,
     cursor: "pointer",
     color: "#b33a2b",
+    width: 28,
+    height: 28
   },
   ghost: {
     padding: "8px 12px",

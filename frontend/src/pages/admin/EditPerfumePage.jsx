@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getAuthHeaders } from "../../services/auth";
-
-const API = "http://localhost:8080/starter/api/perfumes";
+import { fetchPerfumeById, updatePerfume } from "../../application/useCases/perfume";
 
 const emptyForm = {
   name: "",
@@ -25,40 +23,29 @@ export default function EditPerfumePage() {
 
   useEffect(() => {
     loadPerfume();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   async function loadPerfume() {
     setLoading(true);
     setStatus({ loading: false, error: null, ok: null });
-    if (!localStorage.getItem("auth")) {
-      setStatus({ loading: false, error: "Session admin expiree. Reconnecte-toi.", ok: null });
-      setLoading(false);
-      return;
-    }
     try {
-      const res = await fetch(`${API}/${id}`, {
-        headers: { ...getAuthHeaders() },
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
+      const perfume = await fetchPerfumeById(id);
       setForm({
         ...emptyForm,
-        name: data.name ?? "",
-        brand: data.brand ?? "",
-        price: data.price ?? "",
-        stock: data.stock ?? 0,
-        available: data.available ?? true,
-        format: data.format ?? "100ml",
-        description: data.description ?? "",
-        gender: data.gender ?? "UNISEX",
-        type: data.type ?? "EDP",
-        comment: data.comment ?? "",
+        name: perfume.name ?? "",
+        brand: perfume.brand ?? "",
+        price: perfume.price ?? "",
+        stock: perfume.stock ?? 0,
+        available: perfume.available ?? true,
+        format: perfume.format ?? "100ml",
+        description: perfume.description ?? "",
+        gender: perfume.gender ?? "UNISEX",
+        type: perfume.type ?? "EDP",
+        comment: perfume.comment ?? "",
       });
     } catch (err) {
-      setStatus({ loading: false, error: err.message, ok: null });
+      setStatus({ loading: false, error: err?.message || "Erreur.", ok: null });
     } finally {
       setLoading(false);
     }
@@ -72,49 +59,20 @@ export default function EditPerfumePage() {
   async function onSubmit(e) {
     e.preventDefault();
     setStatus({ loading: true, error: null, ok: null });
-    if (!localStorage.getItem("auth")) {
-      setStatus({ loading: false, error: "Session admin expiree. Reconnecte-toi.", ok: null });
-      return;
-    }
-
-    const payload = {
-      name: form.name,
-      brand: form.brand || null,
-      description: form.description || null,
-      format: form.format || null,
-      gender: form.gender || null,
-      type: form.type || null,
-      comment: form.comment || null,
-      available: Boolean(form.available),
-      stock: Number(form.stock || 0),
-      price: form.price === "" ? null : Number(form.price),
-    };
-
     try {
-      const res = await fetch(`${API}/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status} - ${text}`);
-      }
-
-      await res.json();
+      await updatePerfume(id, form);
       setStatus({ loading: false, error: null, ok: "Mise à jour enregistrée." });
     } catch (err) {
-      setStatus({ loading: false, error: err.message, ok: null });
+      setStatus({ loading: false, error: err?.message || "Erreur.", ok: null });
     }
   }
 
   return (
-    <div className="admin-edit">
+    <div className="admin-create">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600&display=swap');
 
-        .admin-edit {
+        .admin-create {
           --cream: #fff6ef;
           --peach: #ffd7c2;
           --apricot: #ffb088;
@@ -135,8 +93,8 @@ export default function EditPerfumePage() {
           color: var(--ink);
         }
 
-        .admin-edit::before,
-        .admin-edit::after {
+        .admin-create::before,
+        .admin-create::after {
           content: "";
           position: absolute;
           width: 260px;
@@ -148,27 +106,27 @@ export default function EditPerfumePage() {
           z-index: 0;
         }
 
-        .admin-edit::before {
+        .admin-create::before {
           background: rgba(255, 176, 136, 0.6);
           top: -80px;
           right: 10%;
         }
 
-        .admin-edit::after {
+        .admin-create::after {
           background: rgba(255, 215, 194, 0.8);
           bottom: -120px;
           left: 5%;
           animation-delay: 2s;
         }
 
-        .admin-edit__wrap {
+        .admin-create__wrap {
           position: relative;
           z-index: 1;
           max-width: 1100px;
           margin: 0 auto;
         }
 
-        .admin-edit__header {
+        .admin-create__header {
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -177,7 +135,7 @@ export default function EditPerfumePage() {
           margin-bottom: 28px;
         }
 
-        .admin-edit__eyebrow {
+        .admin-create__eyebrow {
           text-transform: uppercase;
           letter-spacing: 0.18em;
           font-size: 12px;
@@ -186,27 +144,27 @@ export default function EditPerfumePage() {
           margin-bottom: 8px;
         }
 
-        .admin-edit__title {
+        .admin-create__title {
           font-family: "Fraunces", "Times New Roman", serif;
           font-size: clamp(32px, 4vw, 44px);
           margin: 0 0 8px;
         }
 
-        .admin-edit__subtitle {
+        .admin-create__subtitle {
           color: var(--muted);
           font-size: 16px;
-          max-width: 520px;
+          max-width: 560px;
           margin: 0;
         }
 
-        .admin-edit__status {
+        .admin-create__status {
           display: flex;
           align-items: center;
           gap: 8px;
           flex-wrap: wrap;
         }
 
-        .admin-edit__chip {
+        .admin-create__chip {
           padding: 8px 14px;
           border-radius: 999px;
           background: rgba(255, 107, 107, 0.12);
@@ -215,24 +173,23 @@ export default function EditPerfumePage() {
           font-size: 13px;
         }
 
-        .admin-edit__link {
+        .admin-create__link {
           padding: 8px 14px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 107, 107, 0.4);
-          color: #b33a2b;
-          text-decoration: none;
-          font-weight: 600;
-          font-size: 13px;
+          border: 1px solid rgba(255, 107, 107, 0.35);
           background: rgba(255, 255, 255, 0.9);
+          color: #b33a2b;
+          font-weight: 700;
+          text-decoration: none;
         }
 
-        .admin-edit__layout {
+        .admin-create__layout {
           display: grid;
           grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.8fr);
           gap: 24px;
         }
 
-        .admin-edit__card {
+        .admin-create__card {
           background: var(--glass);
           border-radius: 22px;
           padding: 28px;
@@ -242,13 +199,13 @@ export default function EditPerfumePage() {
           animation: fadeUp 0.6s ease;
         }
 
-        .admin-edit__grid {
+        .admin-create__grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
           gap: 16px;
         }
 
-        .admin-edit__field {
+        .admin-create__field {
           display: flex;
           flex-direction: column;
           gap: 6px;
@@ -256,9 +213,9 @@ export default function EditPerfumePage() {
           font-weight: 600;
         }
 
-        .admin-edit__field input,
-        .admin-edit__field select,
-        .admin-edit__field textarea {
+        .admin-create__field input,
+        .admin-create__field select,
+        .admin-create__field textarea {
           border-radius: 12px;
           border: 1px solid rgba(28, 25, 22, 0.12);
           padding: 10px 12px;
@@ -268,24 +225,22 @@ export default function EditPerfumePage() {
           transition: border 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .admin-edit__field textarea {
+        .admin-create__field textarea {
           min-height: 90px;
           resize: vertical;
         }
 
-        .admin-edit__field input:focus,
-        .admin-edit__field select:focus,
-        .admin-edit__field textarea:focus {
+        .admin-create__field input:focus,
+        .admin-create__field select:focus,
+        .admin-create__field textarea:focus {
           outline: none;
           border-color: rgba(255, 107, 107, 0.7);
           box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.16);
         }
 
-        .admin-edit__field--full {
-          grid-column: 1 / -1;
-        }
+        .admin-create__field--full { grid-column: 1 / -1; }
 
-        .admin-edit__actions {
+        .admin-create__actions {
           margin-top: 20px;
           display: flex;
           align-items: center;
@@ -294,7 +249,7 @@ export default function EditPerfumePage() {
           flex-wrap: wrap;
         }
 
-        .admin-edit__toggle {
+        .admin-create__toggle {
           display: inline-flex;
           align-items: center;
           gap: 10px;
@@ -302,7 +257,7 @@ export default function EditPerfumePage() {
           font-weight: 600;
         }
 
-        .admin-edit__toggle input {
+        .admin-create__toggle input {
           appearance: none;
           width: 48px;
           height: 28px;
@@ -310,10 +265,10 @@ export default function EditPerfumePage() {
           background: rgba(28, 25, 22, 0.12);
           position: relative;
           transition: background 0.2s ease;
-          cursor: not-allowed;
+          cursor: pointer;
         }
 
-        .admin-edit__toggle input::after {
+        .admin-create__toggle input::after {
           content: "";
           position: absolute;
           width: 22px;
@@ -326,15 +281,15 @@ export default function EditPerfumePage() {
           box-shadow: 0 6px 10px rgba(0, 0, 0, 0.12);
         }
 
-        .admin-edit__toggle input:checked {
+        .admin-create__toggle input:checked {
           background: linear-gradient(120deg, #79d2b1, #44c8a1);
         }
 
-        .admin-edit__toggle input:checked::after {
+        .admin-create__toggle input:checked::after {
           transform: translateX(20px);
         }
 
-        .admin-edit__button {
+        .admin-create__button {
           border: none;
           padding: 12px 24px;
           border-radius: 999px;
@@ -347,39 +302,29 @@ export default function EditPerfumePage() {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .admin-edit__button:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
+        .admin-create__button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
 
-        .admin-edit__button:not(:disabled):hover {
+        .admin-create__button:not(:disabled):hover {
           transform: translateY(-1px);
           box-shadow: 0 18px 32px rgba(255, 107, 107, 0.3);
         }
 
-        .admin-edit__message {
+        .admin-create__message {
           margin-top: 14px;
           font-size: 14px;
           font-weight: 600;
         }
+        .admin-create__message--ok { color: #1a7f4f; }
+        .admin-create__message--error { color: #b33a2b; }
 
-        .admin-edit__message--ok {
-          color: #1a7f4f;
-        }
-
-        .admin-edit__message--error {
-          color: #b33a2b;
-        }
-
-        .admin-edit__aside {
+        .admin-create__aside {
           display: flex;
           flex-direction: column;
           gap: 18px;
           animation: fadeUp 0.7s ease;
         }
 
-        .admin-edit__panel {
+        .admin-create__panel {
           background: rgba(255, 255, 255, 0.88);
           border-radius: 18px;
           padding: 20px;
@@ -387,31 +332,17 @@ export default function EditPerfumePage() {
           box-shadow: 0 16px 30px rgba(25, 15, 10, 0.1);
         }
 
-        .admin-edit__panel h3 {
+        .admin-create__panel h3 {
           font-family: "Fraunces", "Times New Roman", serif;
           margin: 0 0 12px;
           font-size: 20px;
         }
 
-        .admin-edit__preview-name {
-          font-size: 22px;
-          font-weight: 700;
-          margin: 0 0 4px;
-        }
+        .admin-create__preview-name { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+        .admin-create__preview-brand { color: var(--muted); margin: 0 0 12px; }
 
-        .admin-edit__preview-brand {
-          color: var(--muted);
-          margin: 0 0 12px;
-        }
-
-        .admin-edit__badges {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-bottom: 12px;
-        }
-
-        .admin-edit__badge {
+        .admin-create__badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .admin-create__badge {
           padding: 6px 10px;
           border-radius: 999px;
           background: rgba(255, 176, 136, 0.25);
@@ -420,73 +351,48 @@ export default function EditPerfumePage() {
           color: #7a3d2c;
         }
 
-        .admin-edit__hint {
-          color: var(--muted);
-          font-size: 13px;
-          line-height: 1.6;
-          margin: 0;
-        }
+        .admin-create__hint { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 0; }
 
-        .admin-edit__statusline {
-          margin-top: 12px;
-          padding: 10px 12px;
-          border-radius: 12px;
-          background: rgba(255, 107, 107, 0.12);
-          color: #b33a2b;
-          font-weight: 600;
-          font-size: 13px;
-        }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(14px)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(14px); }
-        }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(18px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 900px) {
-          .admin-edit__layout {
-            grid-template-columns: 1fr;
-          }
-        }
+        @media (max-width: 900px) { .admin-create__layout { grid-template-columns: 1fr; } }
       `}</style>
 
-      <div className="admin-edit__wrap">
-        <header className="admin-edit__header">
+      <div className="admin-create__wrap">
+        <header className="admin-create__header">
           <div>
-            <p className="admin-edit__eyebrow">Espace admin</p>
-            <h1 className="admin-edit__title">Modifier un parfum</h1>
-            <p className="admin-edit__subtitle">
-              Mets a jour les informations du catalogue et ajuste le stock en temps reel.
+            <p className="admin-create__eyebrow">Espace admin</p>
+            <h1 className="admin-create__title">Modifier le parfum</h1>
+            <p className="admin-create__subtitle">
+              ID: {id} — charge le produit, modifie les champs puis enregistre.
             </p>
           </div>
-          <div className="admin-edit__status">
-            <span className="admin-edit__chip">
-              {loading ? "Chargement..." : `Edition #${id}`}
-            </span>
-            <Link to="/admin/perfumes/manage" className="admin-edit__link">
-              Retour a la gestion
+
+          <div className="admin-create__status">
+            <Link to="/admin/perfumes/manage" className="admin-create__link">
+              Retour
             </Link>
+            <span className="admin-create__chip">
+              {loading ? "Chargement..." : status.loading ? "Enregistrement..." : "Édition"}
+            </span>
           </div>
         </header>
 
-        <div className="admin-edit__layout">
-          <form onSubmit={onSubmit} className="admin-edit__card">
-            <div className="admin-edit__grid">
-              <label className="admin-edit__field">
+        <div className="admin-create__layout">
+          <form onSubmit={onSubmit} className="admin-create__card">
+            <div className="admin-create__grid">
+              <label className="admin-create__field">
                 Nom*
                 <input name="name" value={form.name} onChange={onChange} required />
               </label>
 
-              <label className="admin-edit__field">
+              <label className="admin-create__field">
                 Marque
                 <input name="brand" value={form.brand} onChange={onChange} />
               </label>
 
-              <label className="admin-edit__field">
+              <label className="admin-create__field">
                 Prix
                 <input
                   name="price"
@@ -499,17 +405,17 @@ export default function EditPerfumePage() {
                 />
               </label>
 
-              <label className="admin-edit__field">
+              <label className="admin-create__field">
                 Stock
                 <input name="stock" type="number" min="0" value={form.stock} onChange={onChange} />
               </label>
 
-              <label className="admin-edit__field">
+              <label className="admin-create__field">
                 Format
-                <input name="format" value={form.format} onChange={onChange} placeholder="50ml / 100ml" />
+                <input name="format" value={form.format} onChange={onChange} />
               </label>
 
-              <label className="admin-edit__field">
+              <label className="admin-create__field">
                 Genre
                 <select name="gender" value={form.gender} onChange={onChange}>
                   <option value="FEMME">FEMME</option>
@@ -518,7 +424,7 @@ export default function EditPerfumePage() {
                 </select>
               </label>
 
-              <label className="admin-edit__field">
+              <label className="admin-create__field">
                 Type
                 <select name="type" value={form.type} onChange={onChange}>
                   <option value="EDT">EDT</option>
@@ -527,67 +433,51 @@ export default function EditPerfumePage() {
                 </select>
               </label>
 
-              <label className="admin-edit__field admin-edit__field--full">
+              <label className="admin-create__field admin-create__field--full">
                 Description
                 <textarea name="description" value={form.description} onChange={onChange} />
               </label>
 
-              <label className="admin-edit__field admin-edit__field--full">
+              <label className="admin-create__field admin-create__field--full">
                 Commentaire
                 <textarea name="comment" value={form.comment} onChange={onChange} />
               </label>
             </div>
 
-            <div className="admin-edit__actions">
-              <label className="admin-edit__toggle">
-                <input
-                  name="available"
-                  type="checkbox"
-                  checked={form.available}
-                  onChange={onChange}
-                  disabled
-                />
-                Disponible (auto via stock)
+            <div className="admin-create__actions">
+              <label className="admin-create__toggle">
+                <input name="available" type="checkbox" checked={form.available} onChange={onChange} />
+                Disponible
               </label>
 
-              <button
-                type="submit"
-                disabled={status.loading || loading}
-                className="admin-edit__button"
-              >
-                {status.loading ? "Mise a jour..." : "Enregistrer les modifications"}
+              <button type="submit" disabled={loading || status.loading} className="admin-create__button">
+                {status.loading ? "Enregistrement..." : "Enregistrer les modifications"}
               </button>
             </div>
 
-            {status.ok && (
-              <p className="admin-edit__message admin-edit__message--ok">{status.ok}</p>
-            )}
+            {status.ok && <p className="admin-create__message admin-create__message--ok">{status.ok}</p>}
             {status.error && (
-              <p className="admin-edit__message admin-edit__message--error">{status.error}</p>
+              <p className="admin-create__message admin-create__message--error">{status.error}</p>
             )}
           </form>
 
-          <aside className="admin-edit__aside">
-            <div className="admin-edit__panel">
-              <h3>Apercu fiche</h3>
-              <p className="admin-edit__preview-name">{form.name || "Nom du parfum"}</p>
-              <p className="admin-edit__preview-brand">{form.brand || "Maison"}</p>
-              <div className="admin-edit__badges">
-                <span className="admin-edit__badge">{form.gender || "UNISEX"}</span>
-                <span className="admin-edit__badge">{form.type || "EDP"}</span>
-                <span className="admin-edit__badge">{form.format || "100ml"}</span>
-                <span className="admin-edit__badge">
-                  {form.available ? "Disponible" : "Indisponible"}
-                </span>
-              </div>
-              <p className="admin-edit__hint">
-                {form.description || "Complete les notes pour donner envie aux clients."}
-              </p>
-              {form.price !== "" && (
-                <p className="admin-edit__statusline">Prix: {form.price} EUR</p>
-              )}
-            </div>
+          <aside className="admin-create__aside">
+            <div className="admin-create__panel">
+              <h3>Aperçu</h3>
+              <p className="admin-create__preview-name">{form.name || "Nom du parfum"}</p>
+              <p className="admin-create__preview-brand">{form.brand || "Maison"}</p>
 
+              <div className="admin-create__badges">
+                <span className="admin-create__badge">{form.gender || "UNISEX"}</span>
+                <span className="admin-create__badge">{form.type || "EDP"}</span>
+                <span className="admin-create__badge">{form.format || "100ml"}</span>
+                <span className="admin-create__badge">{form.available ? "Disponible" : "Indisponible"}</span>
+              </div>
+
+              <p className="admin-create__hint">
+                {form.description || "Ajoute une description courte pour aider les clients a se projeter."}
+              </p>
+            </div>
           </aside>
         </div>
       </div>

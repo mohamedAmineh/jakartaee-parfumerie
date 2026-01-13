@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-
-const API = "http://localhost:8080/starter/api/perfumes";
+import { fetchPublicPerfumeById } from "../application/useCases/perfume";
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -18,26 +17,7 @@ const ProductDetailPage = () => {
       setError(null);
 
       try {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(`${API}/${id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-
-        // Si ton backend renvoie 401 quand token absent/invalid
-        if (res.status === 401) {
-          throw new Error("401: Non autorisé. Connecte-toi puis réessaie.");
-        }
-
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(txt || `HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
+        const data = await fetchPublicPerfumeById(id);
         setPerfume(data);
       } catch (err) {
         setError(err?.message || "Erreur.");
@@ -50,6 +30,8 @@ const ProductDetailPage = () => {
   }, [id]);
 
   function handleAddToCart() {
+    if (!perfume?.id) return;
+
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const exists = cart.find((c) => c.id === perfume.id);
 
@@ -87,11 +69,7 @@ const ProductDetailPage = () => {
             <Link to="/auth" className="detail-ghost" style={{ textDecoration: "none" }}>
               Connexion
             </Link>
-            <button
-              type="button"
-              className="detail-button"
-              onClick={() => navigate(0)}
-            >
+            <button type="button" className="detail-button" onClick={() => navigate(0)}>
               Réessayer
             </button>
           </div>
@@ -114,9 +92,7 @@ const ProductDetailPage = () => {
 
         <div className="detail-card">
           <div>
-            <div className="detail-badge">
-              {perfume.available ? "Disponible" : "Indisponible"}
-            </div>
+            <div className="detail-badge">{perfume.available ? "Disponible" : "Indisponible"}</div>
 
             <h1 className="detail-title">{perfume.name}</h1>
             <p className="detail-brand">{perfume.brand || "Marque inconnue"}</p>
@@ -128,8 +104,7 @@ const ProductDetailPage = () => {
             </p>
 
             <p className="detail-info">
-              <strong>Stock:</strong> {perfume.stock} •{" "}
-              {perfume.available ? "Disponible" : "Rupture"}
+              <strong>Stock:</strong> {perfume.stock} • {perfume.available ? "Disponible" : "Rupture"}
             </p>
 
             {perfume.description && (
@@ -145,28 +120,16 @@ const ProductDetailPage = () => {
             )}
 
             <div className="detail-actions">
-              <button
-                className="detail-button"
-                disabled={!perfume.available}
-                onClick={handleAddToCart}
-              >
+              <button className="detail-button" disabled={!perfume.available} onClick={handleAddToCart}>
                 {perfume.available ? "Ajouter au panier" : "Indisponible"}
               </button>
 
-              <Link
-                to="/products"
-                className="detail-ghost"
-                style={{ textDecoration: "none" }}
-              >
+              <Link to="/products" className="detail-ghost" style={{ textDecoration: "none" }}>
                 Continuer les achats
               </Link>
 
               {added && (
-                <Link
-                  to="/cart"
-                  className="detail-ghost"
-                  style={{ textDecoration: "none" }}
-                >
+                <Link to="/cart" className="detail-ghost" style={{ textDecoration: "none" }}>
                   Voir mon panier
                 </Link>
               )}
@@ -176,8 +139,7 @@ const ProductDetailPage = () => {
           <div style={styles.panel}>
             <p style={styles.panelTitle}>Notes rapides</p>
             <p style={styles.panelText}>
-              Une sélection inspirée par l’esthétique admin : couleurs corail, fonds
-              pastels et cartes en verre.
+              Une sélection inspirée par l’esthétique admin : couleurs corail, fonds pastels et cartes en verre.
             </p>
             <p style={styles.panelText}>
               Ajustez le format, consultez la disponibilité et découvrez la description.

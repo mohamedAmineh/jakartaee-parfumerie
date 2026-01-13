@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { getAuthHeaders } from "../../services/auth";
-
-const API = "http://localhost:8080/starter/api/perfumes";
+import { createPerfume } from "../../application/useCases/perfume";
 
 export default function CreatePerfumePage() {
   const [form, setForm] = useState({
@@ -27,43 +25,20 @@ export default function CreatePerfumePage() {
   async function onSubmit(e) {
     e.preventDefault();
     setStatus({ loading: true, error: null, ok: null });
-    if (!localStorage.getItem("auth")) {
-      setStatus({ loading: false, error: "Session admin expiree. Reconnecte-toi.", ok: null });
-      return;
-    }
-
-    const payload = {
-      name: form.name,
-      brand: form.brand || null,
-      description: form.description || null,
-      format: form.format || null,
-      gender: form.gender || null,
-      type: form.type || null,
-      comment: form.comment || null,
-      available: Boolean(form.available),
-      stock: Number(form.stock || 0),
-      price: form.price === "" ? null : Number(form.price), // BigDecimal cote Java
-    };
 
     try {
-      const res = await fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify(payload),
+      const created = await createPerfume(form);
+
+      setStatus({
+        loading: false,
+        error: null,
+        ok: `Créé: id=${created.id}`,
       });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status} - ${text}`);
-      }
-
-      const created = await res.json();
-      setStatus({ loading: false, error: null, ok: `Cree: id=${created.id}` });
 
       // reset minimal
       setForm((f) => ({ ...f, name: "", brand: "", price: "", description: "", comment: "" }));
     } catch (err) {
-      setStatus({ loading: false, error: err.message, ok: null });
+      setStatus({ loading: false, error: err?.message || "Erreur.", ok: null });
     }
   }
 
@@ -409,6 +384,7 @@ export default function CreatePerfumePage() {
               Ajoute une nouvelle reference en quelques minutes. Tu peux toujours modifier plus tard.
             </p>
           </div>
+
           <div className="admin-create__status">
             <span className="admin-create__chip">
               {status.loading ? "Creation en cours..." : "Formulaire produit"}
@@ -497,9 +473,7 @@ export default function CreatePerfumePage() {
               </button>
             </div>
 
-            {status.ok && (
-              <p className="admin-create__message admin-create__message--ok">{status.ok}</p>
-            )}
+            {status.ok && <p className="admin-create__message admin-create__message--ok">{status.ok}</p>}
             {status.error && (
               <p className="admin-create__message admin-create__message--error">{status.error}</p>
             )}
@@ -510,20 +484,19 @@ export default function CreatePerfumePage() {
               <h3>Apercu fiche</h3>
               <p className="admin-create__preview-name">{form.name || "Nom du parfum"}</p>
               <p className="admin-create__preview-brand">{form.brand || "Maison"}</p>
+
               <div className="admin-create__badges">
                 <span className="admin-create__badge">{form.gender || "UNISEX"}</span>
                 <span className="admin-create__badge">{form.type || "EDP"}</span>
                 <span className="admin-create__badge">{form.format || "100ml"}</span>
-                <span className="admin-create__badge">
-                  {form.available ? "Disponible" : "Indisponible"}
-                </span>
+                <span className="admin-create__badge">{form.available ? "Disponible" : "Indisponible"}</span>
               </div>
+
               <p className="admin-create__hint">
                 {form.description || "Ajoute une description courte pour aider les clients a se projeter."}
               </p>
-              {form.price && (
-                <p className="admin-create__statusline">Prix: {form.price} EUR</p>
-              )}
+
+              {form.price && <p className="admin-create__statusline">Prix: {form.price} EUR</p>}
             </div>
 
             <div className="admin-create__panel">

@@ -1,32 +1,36 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { useFetch } from '../hooks/useFetch';
-import { fetchPerfumes } from '../services/api';
-import PerfumeCard from '../components/PerfumeCard';
-import SearchBar from '../components/SearchBar';
+import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useFetch } from "../hooks/useFetch";
+import { fetchPerfumesList } from "../application/useCases/perfume";
+import PerfumeCard from "../components/PerfumeCard";
+import SearchBar from "../components/SearchBar";
 
 const ProductsPage = () => {
-  const { data: perfumes, loading, error } = useFetch(fetchPerfumes);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBrand, setSelectedBrand] = useState('');
+  const { data: perfumes, loading, error } = useFetch(fetchPerfumesList);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+
+  const safePerfumes = Array.isArray(perfumes) ? perfumes : [];
 
   const filteredPerfumes = useMemo(() => {
-    return perfumes
-      .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-      .filter((p) => (selectedBrand ? p.brand === selectedBrand : true));
-  }, [perfumes, searchTerm, selectedBrand]);
+    return safePerfumes
+      .filter((p) => String(p?.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()))
+      .filter((p) => (selectedBrand ? p?.brand === selectedBrand : true));
+  }, [safePerfumes, searchTerm, selectedBrand]);
 
-  const isLoggedIn = !!localStorage.getItem("token"); 
+  // ✅ auth (Basic) au lieu de token
+  const isLoggedIn = !!localStorage.getItem("auth");
 
   const brands = useMemo(() => {
-    return perfumes.reduce((acc, perfume) => {
-      if (!acc.includes(perfume.brand)) acc.push(perfume.brand);
+    return safePerfumes.reduce((acc, perfume) => {
+      const b = perfume?.brand;
+      if (b && !acc.includes(b)) acc.push(b);
       return acc;
     }, []);
-  }, [perfumes]);
+  }, [safePerfumes]);
 
   if (loading) return <div style={styles.loading}>Chargement...</div>;
-  if (error) return <div style={styles.error}>Erreur: {error}</div>;
+  if (error) return <div style={styles.error}>Erreur: {String(error)}</div>;
 
   return (
     <div style={styles.page}>
@@ -92,10 +96,26 @@ const ProductsPage = () => {
               Explore des references fines avec un style harmonisé à l’espace admin.
             </p>
           </div>
+
+          {/* optionnel: boutons à droite (tu avais import Link + styles.badge/cartBtn, je les remets propre) */}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            {!isLoggedIn ? (
+              <Link to="/auth" style={styles.cartBtn}>
+                Se connecter
+              </Link>
+            ) : (
+              <span style={styles.badge}>Connecté</span>
+            )}
+
+            <Link to="/cart" style={styles.cartBtn}>
+              Panier
+            </Link>
+          </div>
         </div>
 
         <div className="catalog-card" style={{ marginBottom: 18 }}>
           <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+
           <div className="catalog-filter">
             <label>Marque :</label>
             <select
@@ -119,9 +139,7 @@ const ProductsPage = () => {
           ))}
         </div>
 
-        {filteredPerfumes.length === 0 && (
-          <p style={styles.noResults}>Aucun parfum trouvé</p>
-        )}
+        {filteredPerfumes.length === 0 && <p style={styles.noResults}>Aucun parfum trouvé</p>}
       </div>
     </div>
   );
@@ -129,34 +147,34 @@ const ProductsPage = () => {
 
 const styles = {
   page: {
-    minHeight: '100vh',
-    padding: '40px 20px 80px',
+    minHeight: "100vh",
+    padding: "40px 20px 80px",
     background:
-      'radial-gradient(circle at 12% 15%, rgba(255, 177, 136, 0.35), transparent 48%),' +
-      'radial-gradient(circle at 88% 18%, rgba(255, 107, 107, 0.18), transparent 52%),' +
-      'radial-gradient(circle at 50% 80%, rgba(255, 215, 194, 0.6), transparent 55%),' +
-      '#fffaf6',
+      "radial-gradient(circle at 12% 15%, rgba(255, 177, 136, 0.35), transparent 48%)," +
+      "radial-gradient(circle at 88% 18%, rgba(255, 107, 107, 0.18), transparent 52%)," +
+      "radial-gradient(circle at 50% 80%, rgba(255, 215, 194, 0.6), transparent 55%)," +
+      "#fffaf6",
   },
-  loading: { textAlign: 'center', fontSize: '20px', padding: '100px' },
-  error: { textAlign: 'center', color: 'red', fontSize: '18px' },
+  loading: { textAlign: "center", fontSize: "20px", padding: "100px" },
+  error: { textAlign: "center", color: "red", fontSize: "18px" },
   badge: {
-    padding: '8px 14px',
-    borderRadius: '999px',
-    background: 'rgba(255, 107, 107, 0.12)',
-    color: '#b33a2b',
+    padding: "8px 14px",
+    borderRadius: "999px",
+    background: "rgba(255, 107, 107, 0.12)",
+    color: "#b33a2b",
     fontWeight: 700,
-    fontSize: '13px',
+    fontSize: "13px",
   },
   cartBtn: {
-    padding: '10px 14px',
-    borderRadius: '12px',
-    border: '1px solid rgba(255,107,107,0.35)',
-    background: '#fff',
-    color: '#b33a2b',
+    padding: "10px 14px",
+    borderRadius: "12px",
+    border: "1px solid rgba(255,107,107,0.35)",
+    background: "#fff",
+    color: "#b33a2b",
     fontWeight: 700,
-    textDecoration: 'none',
+    textDecoration: "none",
   },
-  noResults: { textAlign: 'center', fontSize: '18px', color: '#999', marginTop: '20px' },
+  noResults: { textAlign: "center", fontSize: "18px", color: "#999", marginTop: "20px" },
 };
 
 export default ProductsPage;
