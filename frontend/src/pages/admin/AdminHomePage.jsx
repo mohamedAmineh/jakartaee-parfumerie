@@ -311,6 +311,21 @@ export default function AdminHomePage() {
             </div>
           </Link>
 
+          <Link
+            to="/admin/stats"
+            className="admin-home__card admin-home__card--primary"
+            style={{ textDecoration: "none" }}
+          >
+            <div className="admin-home__stack">
+              <h2 className="admin-home__card-title">Statistiques</h2>
+              <p className="admin-home__highlight">Ventes & top parfums</p>
+              <p className="admin-home__card-text">
+                Tableau de bord interactif avec les tendances de vente.
+              </p>
+              <span className="admin-home__cta">Voir les stats -&gt;</span>
+            </div>
+          </Link>
+
         </section>
       </div>
     </div>

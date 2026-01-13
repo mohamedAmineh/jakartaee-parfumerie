@@ -14,6 +14,7 @@ import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
 import ManageOredrsPage from "./pages/admin/ManageOredrsPage";
 import EditPerfumePage from "./pages/admin/EditPerfumePage";
 import CreatePerfumePage from "./pages/admin/CreatePerfumePage";
+import AdminStatsPage from "./pages/admin/AdminStatsPage";
 
 export default function App() {
   return (
@@ -65,6 +66,14 @@ export default function App() {
           element={
             <AdminRoute>
               <ManageOredrsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="admin/stats"
+          element={
+            <AdminRoute>
+              <AdminStatsPage />
             </AdminRoute>
           }
         />
