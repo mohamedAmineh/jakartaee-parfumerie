@@ -1,98 +1,116 @@
-# JakartaEE Parfumerie — Full Stack
+```markdown
+<div align="center">
 
-Application e-commerce “Parfumerie” avec backend Jakarta EE (Payara Micro) + PostgreSQL + frontend React (Vite).
+# 🧴 JakartaEE Parfumerie
 
-## Stack
-- Backend: Jakarta EE (JAX-RS, JPA/EclipseLink), Payara Micro
-- DB: PostgreSQL
-- Messaging: ActiveMQ Artemis
-- Frontend: React + Vite
+**Application e-commerce full-stack “Parfumerie”**  
+Backend Jakarta EE (Payara Micro) + PostgreSQL + Frontend React (Vite)
 
-## URLs
-- Backend base: `http://localhost:8080/starter`
-- API base: `http://localhost:8080/starter/api`
-- WADL (liste des endpoints): `http://localhost:8080/starter/api/application.wadl`
-- Frontend: `http://localhost:5173`
+[![Backend Status](https://img.shields.io/badge/Backend-Payara%20Micro-brightgreen?style=flat&logo=java)](https://jakarta.ee/)
+[![Frontend Status](https://img.shields.io/badge/Frontend-React%20Vite-blue?style=flat&logo=react)](https://react.dev/)
+[![Database](https://img.shields.io/badge/DB-PostgreSQL-blue?style=flat&logo=postgresql)](https://www.postgresql.org/)
 
-## Prérequis
-- Docker + Docker Compose
-- Java 21 + Maven
-- Node.js + npm
+[🚀 Démo Live](http://localhost:5173) | [📖 API Docs](http://localhost:8080/starter/api/application.wadl)
 
-## Lancer avec Docker
-À la racine du repo:
+</div>
+
+## ✨ Fonctionnalités
+
+- 🛒 Catalogue parfums (recherche, filtres, détail)
+- 🧑‍💼 Espace client (connexion, panier, commandes)
+- 👨‍💼 Admin (gestion parfums/commandes)
+- 💾 Base de données PostgreSQL avec seed automatique
+- 📱 Responsive design
+- 🔒 Authentification JWT + rôles (ADMIN/CLIENT)
+
+## 🛠️ Stack Technique
+
+| **Backend** | **Frontend** | **Base de données** |
+|-------------|--------------|---------------------|
+| Jakarta EE 11 | React 18 | PostgreSQL 16 |
+| JAX-RS | Vite | JPA/EclipseLink |
+| Payara Micro | TailwindCSS | ActiveMQ Artemis |
+
+## 🚀 Lancement Rapide (Docker)
+
+À la racine du projet :
 
 ```bash
+# Clone & lance tout
+git clone <ton-repo>
+cd jakartaee-parfumerie
 docker compose up -d --build
-Logs backend:
+```
 
-bash
-docker logs -f parfumerie-app
-Arrêter:
+✅ **Frontend** : `http://localhost:5173`  
+✅ **Backend/API** : `http://localhost:8080/starter/api`  
+✅ **Base de données** : Auto-créée (seedée)
 
-bash
+```bash
+# Arrêter
 docker compose down
-Reset complet (⚠️ supprime la DB):
+```
 
-bash
-docker compose down -v
-docker compose up -d --build
-Backend (Maven)
-Dans le dossier backend (si ton projet est monorepo, adapte le chemin):
+## 📱 Utilisation
 
-bash
+### Comptes de démonstration (seedés automatiquement)
+| **Type** | **Email** | **Mot de passe** |
+|----------|-----------|------------------|
+| **ADMIN** | `admin@parfumerie.local` | `admin123` |
+| **CLIENT** | `client@parfumerie.local` | `client123` |
+
+### APIs principales
+```
+GET    /api/perfumes          → Liste parfums
+POST   /api/auth/login        → Connexion
+POST   /api/users             → Inscription client
+POST   /api/orders            → Créer commande
+```
+
+## 🏗️ Installation manuelle
+
+### Backend (Payara Micro)
+```bash
+cd backend
 mvn clean package
-Puis rebuild Docker:
+java -jar target/jakartaee-parfumerie-microbundle.jar
+```
 
-bash
-docker compose up -d --build
-Frontend (Vite)
-Dans le dossier frontend:
-
-bash
+### Frontend (React)
+```bash
+cd frontend
 npm install
 npm run dev
-Endpoints principaux
-Auth
+```
 
-POST /auth/login
+## 📁 Structure du projet
 
-Users
+```
+jakartaee-parfumerie/
+├── backend/                 # Jakarta EE API
+│   ├── src/main/java/com/parfumerie/
+│   │   ├── domain/         # Entités JPA
+│   │   ├── rest/           # Ressources JAX-RS
+│   │   └── bootstrap/      # DataSeeder (données auto)
+│   └── pom.xml
+├── frontend/                # React + Vite
+├── docker-compose.yml
+└── README.md
+```
 
-POST /users (création d’un compte client)
+## 🔧 Prérequis
 
-Perfumes
+```bash
+# Docker & Docker Compose
+docker --version
+docker compose version
 
-GET /perfumes
+# Java 21 + Maven
+java --version
+mvn --version
 
-POST /perfumes (admin only côté UI)
+# Node.js 18+ + npm
+node --version
+npm --version
+```
 
-Orders
-
-GET /orders
-
-POST /orders
-
-OrderItems
-
-GET /orderitems
-
-POST /orderitems
-
-Pour vérifier les routes réellement exposées, ouvrir .../application.wadl.
-
-Rôles / Accès admin
-Le login renvoie un objet user avec un champ role.
-
-Le frontend protège les routes admin avec une AdminRoute et redirige vers /admin si role === "ADMIN".
-
-Ports (par défaut)
-Backend: 8080
-
-Postgres: 5432
-
-Artemis console: 8161
-
-Artemis JMS: 61616
-
-Frontend: 5173
