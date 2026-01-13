@@ -4,6 +4,15 @@ import { getAuthHeaders } from "../../services/auth";
 const API = "http://localhost:8080/starter/api/orders";
 const HIGH_VALUE_THRESHOLD = 500;
 const HIGH_VALUE_API = "http://localhost:8080/starter/api/orders/high-value";
+const STATUS_OPTIONS = [
+  "PENDING",
+  "PAID",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+];
+
 
 export default function ManageOredrsPage() {
   const [data, setData] = useState([]);
@@ -11,7 +20,6 @@ export default function ManageOredrsPage() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState(null);
-  // commandes routées en "high value" (par le router backend)
   const [highValueIds, setHighValueIds] = useState(new Set());
 
   useEffect(() => {

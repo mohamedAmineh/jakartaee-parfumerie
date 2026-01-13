@@ -339,14 +339,6 @@ export default function ManagePerfumesPage() {
                   >
                     {p.available ? "Désactiver" : "Activer"}
                   </button>
-                  <Link
-                    to={`/admin/perfumes/new?duplicate=${p.id}`}
-                    className="admin-manage__ghost"
-                    style={{ textDecoration: "none" }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Dupliquer
-                  </Link>
                   <button
                     className="admin-manage__ghost admin-manage__danger"
                     onClick={(e) => {
