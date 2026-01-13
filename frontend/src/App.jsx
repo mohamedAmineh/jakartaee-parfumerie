@@ -13,6 +13,7 @@ import AdminHomePage from "./pages/admin/AdminHomePage";
 import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
 import ManageOredrsPage from "./pages/admin/ManageOredrsPage";
 import EditPerfumePage from "./pages/admin/EditPerfumePage";
+import CreatePerfumePage from "./pages/admin/CreatePerfumePage";
 
 export default function App() {
   return (
@@ -40,6 +41,14 @@ export default function App() {
           element={
             <AdminRoute>
               <ManagePerfumesPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="admin/perfumes/new"
+          element={
+            <AdminRoute>
+              <CreatePerfumePage />
             </AdminRoute>
           }
         />
