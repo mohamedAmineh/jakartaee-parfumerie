@@ -8,6 +8,7 @@ import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import AuthPage from "./pages/AuthPage";
 import CartPage from "./pages/CartPage";
+import MyOrdersPage from "./pages/MyOrdersPage";
 
 import AdminHomePage from "./pages/admin/AdminHomePage";
 import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
@@ -27,6 +28,7 @@ export default function App() {
 
         <Route path="auth" element={<AuthPage />} />
         <Route path="cart" element={<CartPage />} />
+        <Route path="orders" element={<MyOrdersPage />} />
 
         {/* Admin */}
         <Route
