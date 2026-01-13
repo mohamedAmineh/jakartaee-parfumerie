@@ -34,7 +34,6 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    // ✅ Nouveau champ role
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role = Role.CLIENT; // défaut

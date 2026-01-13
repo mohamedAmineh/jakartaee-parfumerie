@@ -1,7 +1,8 @@
 // src/application/useCases/createOrder.js
 
 import { createOrderPayload } from "../../domain/models/orders";
-import { clearCart } from "../../domain/services/cartService";
+import { clearCart } from "./cart";
+import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 
 const ORDERS_API = "http://localhost:8080/starter/api/orders";
 
@@ -15,17 +16,17 @@ export async function createOrderFromCart({ user, items }) {
 
   const payload = createOrderPayload({ userId: user.id, items });
 
-  const res = await fetch(ORDERS_API, {
+  const res = await httpRequest(ORDERS_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
-    const txt = await res.text();
+    const txt = await readErrorBody(res);
     throw new Error(txt || `HTTP ${res.status}`);
   }
 
   clearCart();
-  return await res.json().catch(() => null);
+  return await parseJson(res).catch(() => null);
 }

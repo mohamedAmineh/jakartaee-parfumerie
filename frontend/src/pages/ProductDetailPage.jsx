@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { fetchPublicPerfumeById } from "../application/useCases/perfume";
+import { loadCart, saveCart } from "../application/useCases/cart";
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -32,7 +33,7 @@ const ProductDetailPage = () => {
   function handleAddToCart() {
     if (!perfume?.id) return;
 
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const cart = loadCart();
     const exists = cart.find((c) => c.id === perfume.id);
 
     if (exists) {
@@ -47,7 +48,7 @@ const ProductDetailPage = () => {
       });
     }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
+    saveCart(cart);
     setAdded(true);
   }
 

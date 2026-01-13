@@ -1,24 +1,12 @@
 import { getAuthHeaders } from "../../services/auth";
+import { httpRequest, readErrorBody, parseBody } from "../../infrastructure/httpClient";
 
 const BASE = "http://localhost:8080/starter/api";
 const ORDERS_API = `${BASE}/orders`;
 const HIGH_VALUE_API = `${BASE}/orders/high-value`;
 
-async function readErrorBody(res) {
-  // protège contre "res.text is not a function"
-  try {
-    if (res && typeof res.text === "function") {
-      const t = await res.text();
-      return t || null;
-    }
-  } catch (_) {
-    // ignore
-  }
-  return null;
-}
-
 async function request(url, options = {}) {
-  const res = await fetch(url, {
+  const res = await httpRequest(url, {
     ...options,
     headers: {
       ...(options.headers || {}),
@@ -35,14 +23,7 @@ async function request(url, options = {}) {
   if (res.status === 204) return null;
 
   // si backend renvoie vide parfois
-  const contentType = res.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
-    // dernier fallback: texte
-    if (typeof res.text === "function") return res.text();
-    return null;
-  }
-
-  return res.json();
+  return parseBody(res);
 }
 
 export async function fetchAllOrders() {

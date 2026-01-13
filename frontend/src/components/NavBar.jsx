@@ -1,19 +1,19 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { logoutUser } from "../application/useCases/auth";
+import { getCurrentUser } from "../application/useCases/session";
 
 export default function NavBar() {
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const user = getCurrentUser();
   const isLoggedIn = !!user;
 
   // Visible uniquement si connecté ET role ADMIN
   const isAdmin = isLoggedIn && String(user?.role || "").toUpperCase() === "ADMIN";
 
   const logout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    localStorage.removeItem("auth");
+    logoutUser();
     navigate("/", { replace: true });
   };
 

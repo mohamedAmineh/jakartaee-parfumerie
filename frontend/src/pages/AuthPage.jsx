@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { encodeBasicAuth } from "../services/auth";
-
-const LOGIN_URL = "http://localhost:8080/starter/api/auth/login";
-const SIGNUP_URL = "http://localhost:8080/starter/api/users";
+import { loginUser, signupUser, logoutUser } from "../application/useCases/auth";
+import { getCurrentUser } from "../application/useCases/session";
 
 const getRoleValue = (role) => {
   if (!role) return "";
@@ -23,9 +21,7 @@ export default function AuthPage() {
   const from = location.state?.from?.pathname || "/";
 
   const [mode, setMode] = useState("login"); // login | signup
-  const [currentUser, setCurrentUser] = useState(() =>
-    JSON.parse(localStorage.getItem("user") || "null")
-  );
+  const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,30 +48,15 @@ export default function AuthPage() {
   }, [mode]);
 
   function handleLogout() {
-    localStorage.removeItem("user");
-    localStorage.removeItem("auth");
+    logoutUser();
     setCurrentUser(null);
     setSuccess(null);
     setMode("login");
   }
 
-  async function loginUser(loginEmail, loginPassword) {
-    const res = await fetch(LOGIN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: loginEmail, password: loginPassword }),
-    });
-
-    if (!res.ok) {
-      const msg = await res.text();
-      throw new Error(msg || `HTTP ${res.status}`);
-    }
-
-    const user = await res.json();
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("auth", encodeBasicAuth(loginEmail, loginPassword));
+  async function handleLogin(loginEmail, loginPassword) {
+    const user = await loginUser(loginEmail, loginPassword);
     setCurrentUser(user);
-
     if (isAdminUser(user)) {
       navigate("/admin", { replace: true });
       return;
@@ -93,7 +74,7 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        await loginUser(email, password);
+        await handleLogin(email, password);
         return;
       }
 
@@ -101,25 +82,21 @@ export default function AuthPage() {
         throw new Error("Les mots de passe ne correspondent pas.");
       }
 
-      const res = await fetch(SIGNUP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          phone,
-          password,
-          address,
-        }),
+      const user = await signupUser({
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+        address,
       });
-
-      if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || `HTTP ${res.status}`);
+      setCurrentUser(user);
+      if (isAdminUser(user)) {
+        navigate("/admin", { replace: true });
+        return;
       }
-
-      await loginUser(email, password);
+      setSuccess(`Connecté en tant que ${user.email}.`);
+      navigate(from, { replace: true });
       setMode("login");
     } catch (err) {
       setError(err?.message || "Erreur.");

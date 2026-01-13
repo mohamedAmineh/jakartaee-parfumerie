@@ -14,7 +14,6 @@ export default function ManagePerfumesPage() {
   const [busyId, setBusyId] = useState(null);
   const [selected, setSelected] = useState(null);
 
-  // ✅ REFRESH via use-case
   async function refresh() {
     setLoading(true);
     setError(null);
@@ -32,7 +31,6 @@ export default function ManagePerfumesPage() {
     refresh();
   }, []);
 
-  // ✅ TOGGLE via use-case
   async function toggleAvailability(id, available) {
     setBusyId(id);
     setError(null);
@@ -46,7 +44,6 @@ export default function ManagePerfumesPage() {
     }
   }
 
-  // ✅ DELETE via use-case
   async function deletePerfumeLocal(id) {
     if (!window.confirm("Supprimer ce parfum ?")) return;
     setBusyId(id);

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchUserOrders } from "../application/useCases/orders";
+import { getCurrentUser } from "../application/useCases/session";
 
 const formatEur = (value) => {
   if (value == null || Number.isNaN(Number(value))) return "-";
@@ -8,7 +9,7 @@ const formatEur = (value) => {
 };
 
 export default function MyOrdersPage() {
-  const user = useMemo(() => JSON.parse(localStorage.getItem("user") || "null"), []);
+  const user = useMemo(() => getCurrentUser(), []);
   const [orders, setOrders] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);

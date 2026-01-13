@@ -4,6 +4,7 @@ import { useFetch } from "../hooks/useFetch";
 import { fetchPerfumesList } from "../application/useCases/perfume";
 import PerfumeCard from "../components/PerfumeCard";
 import SearchBar from "../components/SearchBar";
+import { isAuthenticated } from "../application/useCases/session";
 
 const ProductsPage = () => {
   const { data: perfumes, loading, error } = useFetch(fetchPerfumesList);
@@ -18,8 +19,7 @@ const ProductsPage = () => {
       .filter((p) => (selectedBrand ? p?.brand === selectedBrand : true));
   }, [safePerfumes, searchTerm, selectedBrand]);
 
-  // ✅ auth (Basic) au lieu de token
-  const isLoggedIn = !!localStorage.getItem("auth");
+  const isLoggedIn = isAuthenticated();
 
   const brands = useMemo(() => {
     return safePerfumes.reduce((acc, perfume) => {

@@ -1,24 +1,28 @@
 // src/domain/services/cartService.js
 import { createCartItem, cartItemTotal } from "../models/cartItem";
 
-const CART_KEY = "cart";
+const emptyCartStore = {
+  load() {
+    return [];
+  },
+  save() {},
+  clear() {},
+};
 
-export function loadCart() {
-  const raw = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
-  return Array.isArray(raw)
-    ? raw.map((it) => createCartItem(it))
-    : [];
+export function loadCart(cartStore = emptyCartStore) {
+  const raw = cartStore.load();
+  return Array.isArray(raw) ? raw.map((it) => createCartItem(it)) : [];
 }
 
-export function saveCart(items) {
-  localStorage.setItem(CART_KEY, JSON.stringify(items));
+export function saveCart(items, cartStore = emptyCartStore) {
+  cartStore.save(items);
 }
 
 export function computeCartTotal(items) {
   return items.reduce((sum, it) => sum + cartItemTotal(it), 0);
 }
 
-export function updateItemQuantity(items, id, delta) {
+export function updateItemQuantity(items, id, delta, cartStore = emptyCartStore) {
   const next = items.map((it) =>
     it.id === id
       ? {
@@ -27,16 +31,16 @@ export function updateItemQuantity(items, id, delta) {
         }
       : it
   );
-  saveCart(next);
+  cartStore.save(next);
   return next;
 }
 
-export function removeItemFromCart(items, id) {
+export function removeItemFromCart(items, id, cartStore = emptyCartStore) {
   const next = items.filter((it) => it.id !== id);
-  saveCart(next);
+  cartStore.save(next);
   return next;
 }
 
-export function clearCart() {
-  localStorage.removeItem(CART_KEY);
+export function clearCart(cartStore = emptyCartStore) {
+  cartStore.clear();
 }

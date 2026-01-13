@@ -1,5 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { fetchPerfumesList } from "../../application/useCases/perfume";
+import { fetchOrderNotifications } from "../../application/useCases/notifications";
+import { logoutUser } from "../../application/useCases/auth";
 
 export default function AdminHomePage() {
   const navigate = useNavigate();
@@ -17,12 +20,7 @@ export default function AdminHomePage() {
   async function handleCheckStock() {
     setStockStatus({ loading: true, error: null, summary: null });
     try {
-      const res = await fetch("http://localhost:8080/starter/api/perfumes");
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
-      }
-      const perfumes = await res.json();
+      const perfumes = await fetchPerfumesList();
       const total = perfumes.length;
       const lowStock = perfumes.filter((p) => Number(p.stock || 0) <= 5);
       const lowest = perfumes.reduce(
@@ -44,19 +42,14 @@ export default function AdminHomePage() {
   }
 
   function handleLogout() {
-    localStorage.removeItem("user");
+    logoutUser();
     navigate("/auth", { replace: true });
   }
 
   async function handleFetchNotifications() {
     setOrderNotifs((s) => ({ ...s, loading: true, error: null }));
     try {
-      const res = await fetch("http://localhost:8080/starter/api/notifications/orders");
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
+      const data = await fetchOrderNotifications();
       setOrderNotifs({ loading: false, error: null, items: data || [] });
     } catch (err) {
       setOrderNotifs({ loading: false, error: err.message, items: [] });

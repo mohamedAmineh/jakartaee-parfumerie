@@ -2,17 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { updateMyProfile, changeMyPassword } from "../application/useCases/user";
-
-const getStoredUser = () => {
-  try {
-    return JSON.parse(localStorage.getItem("user") || "null");
-  } catch {
-    return null;
-  }
-};
+import { getCurrentUser, setCurrentUser } from "../application/useCases/session";
 
 export default function MyProfilePage() {
-  const [user, setUser] = useState(getStoredUser);
+  const [user, setUser] = useState(getCurrentUser);
   const roleLabel = String(user?.role || "CLIENT").toUpperCase();
 
   const [firstName, setFirstName] = useState(user?.firstName || "");
@@ -33,7 +26,7 @@ export default function MyProfilePage() {
 
   const updateLocalUser = (nextUser) => {
     setUser(nextUser);
-    localStorage.setItem("user", JSON.stringify(nextUser));
+    setCurrentUser(nextUser);
     setFirstName(nextUser?.firstName || "");
     setLastName(nextUser?.lastName || "");
     setPhone(nextUser?.phone || "");

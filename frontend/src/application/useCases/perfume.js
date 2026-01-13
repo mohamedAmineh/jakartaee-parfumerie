@@ -1,22 +1,21 @@
-// src/application/useCases/perfume.js ✅ FICHIER COMPLET CORRIGÉ
-import { getAuthHeaders } from "../../services/auth";
+import { getAuthHeaders, hasAuth } from "../../services/auth";
 import { createPerfumeEntity, isValidPerfume } from "../../domain/models/perfume";
+import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 
 const PERFUMES_API = "http://localhost:8080/starter/api/perfumes";
 
-// ✅ TOUS LES EXPORTS
 export async function createPerfume(form) {
   if (!isValidPerfume(form)) {
     throw new Error("Le nom du parfum est obligatoire.");
   }
 
-  if (!localStorage.getItem("auth")) {
+  if (!hasAuth()) {
     throw new Error("Session admin expirée. Reconnecte-toi.");
   }
 
   const payload = createPerfumeEntity(form);
 
-  const res = await fetch(PERFUMES_API, {
+  const res = await httpRequest(PERFUMES_API, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -26,34 +25,34 @@ export async function createPerfume(form) {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status} - ${text}`);
+    const text = await readErrorBody(res);
+    throw new Error(text ? `HTTP ${res.status} - ${text}` : `HTTP ${res.status}`);
   }
 
-  return await res.json();
+  return await parseJson(res);
 }
 
 export async function fetchPerfumesList() {
-  const res = await fetch(PERFUMES_API);
+  const res = await httpRequest(PERFUMES_API);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
+  return await parseJson(res);
 }
 
 export async function fetchPerfumeById(id) {
-  if (!localStorage.getItem("auth")) {
+  if (!hasAuth()) {
     throw new Error("Session admin expirée. Reconnecte-toi.");
   }
 
-  const res = await fetch(`${PERFUMES_API}/${id}`, {
+  const res = await httpRequest(`${PERFUMES_API}/${id}`, {
     headers: { ...getAuthHeaders() },
   });
 
   if (!res.ok) {
-    const text = await res.text();
+    const text = await readErrorBody(res);
     throw new Error(text || `HTTP ${res.status}`);
   }
 
-  return await res.json();
+  return await parseJson(res);
 }
 
 export async function updatePerfume(id, form) {
@@ -61,13 +60,13 @@ export async function updatePerfume(id, form) {
     throw new Error("Le nom du parfum est obligatoire.");
   }
 
-  if (!localStorage.getItem("auth")) {
+  if (!hasAuth()) {
     throw new Error("Session admin expirée. Reconnecte-toi.");
   }
 
   const payload = createPerfumeEntity(form);
 
-  const res = await fetch(`${PERFUMES_API}/${id}`, {
+  const res = await httpRequest(`${PERFUMES_API}/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -77,20 +76,20 @@ export async function updatePerfume(id, form) {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status} - ${text}`);
+    const text = await readErrorBody(res);
+    throw new Error(text ? `HTTP ${res.status} - ${text}` : `HTTP ${res.status}`);
   }
 
-  return await res.json();
+  return await parseJson(res);
 }
 
 export async function togglePerfumeAvailability(id, currentAvailable) {
-  if (!localStorage.getItem("auth")) {
+  if (!hasAuth()) {
     throw new Error("Session admin expirée. Reconnecte-toi.");
   }
 
   const payload = { available: !currentAvailable };
-  const res = await fetch(`${PERFUMES_API}/${id}`, {
+  const res = await httpRequest(`${PERFUMES_API}/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -100,32 +99,32 @@ export async function togglePerfumeAvailability(id, currentAvailable) {
   });
 
   if (!res.ok) {
-    const txt = await res.text();
+    const txt = await readErrorBody(res);
     throw new Error(txt || `HTTP ${res.status}`);
   }
 }
 
 export async function deletePerfume(id) {
-  if (!localStorage.getItem("auth")) {
+  if (!hasAuth()) {
     throw new Error("Session admin expirée. Reconnecte-toi.");
   }
 
-  const res = await fetch(`${PERFUMES_API}/${id}`, {
+  const res = await httpRequest(`${PERFUMES_API}/${id}`, {
     method: "DELETE",
     headers: { ...getAuthHeaders() },
   });
 
   if (!res.ok) {
-    const txt = await res.text();
+    const txt = await readErrorBody(res);
     throw new Error(txt || `HTTP ${res.status}`);
   }
 }
 
 export async function fetchPublicPerfumeById(id) {
-  const res = await fetch(`${PERFUMES_API}/${id}`);
+  const res = await httpRequest(`${PERFUMES_API}/${id}`);
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
+    const text = await readErrorBody(res);
     throw new Error(text || `HTTP ${res.status}`);
   }
-  return res.json();
+  return parseJson(res);
 }

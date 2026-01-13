@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  loadCart, 
-  updateItemQuantity, 
-  removeItemFromCart, 
-  computeCartTotal 
-} from "../domain/services/cartService";
+import {
+  loadCart,
+  updateItemQuantity,
+  removeItemFromCart,
+  computeCartTotal,
+} from "../application/useCases/cart";
 import { createOrderFromCart } from "../application/useCases/CreateOrder";
+import { getCurrentUser } from "../application/useCases/session";
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function CartPage() {
     setLoading(true);
 
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "null");
+      const user = getCurrentUser();
       await createOrderFromCart({ user, items });
       
       setSuccess("Commande enregistrée ! Un admin recevra la notification.");
