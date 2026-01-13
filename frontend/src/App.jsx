@@ -81,6 +81,14 @@ export default function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="admin/profile"
+          element={
+            <AdminRoute>
+              <MyProfilePage />
+            </AdminRoute>
+          }
+        />
       </Route>
     </Routes>
   );

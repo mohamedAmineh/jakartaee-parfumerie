@@ -15,6 +15,7 @@ const getStoredUser = () => {
 
 export default function MyProfilePage() {
   const [user, setUser] = useState(getStoredUser);
+  const roleLabel = String(user?.role || "CLIENT").toUpperCase();
 
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
@@ -188,7 +189,7 @@ export default function MyProfilePage() {
             <p>Gere tes informations personnelles et ton mot de passe.</p>
           </div>
           <div className="my-profile__identity">
-            <span className="my-profile__pill">Client</span>
+            <span className="my-profile__pill">{roleLabel}</span>
             <div className="my-profile__email">{user.email}</div>
           </div>
         </header>

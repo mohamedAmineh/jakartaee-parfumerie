@@ -51,6 +51,12 @@ export default function NavBar() {
             </Link>
           )}
 
+          {isAdmin && (
+            <Link to="/admin/profile" style={styles.pill}>
+              Mon profil
+            </Link>
+          )}
+
           {!isLoggedIn ? (
             <Link to="/auth" style={{ ...styles.pill, ...styles.pillPrimary }}>
               Connexion
