@@ -15,6 +15,7 @@ const ProductsPage = () => {
 
   const filteredPerfumes = useMemo(() => {
     return safePerfumes
+      .filter((p) => p?.available === true)
       .filter((p) => String(p?.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()))
       .filter((p) => (selectedBrand ? p?.brand === selectedBrand : true));
   }, [safePerfumes, searchTerm, selectedBrand]);

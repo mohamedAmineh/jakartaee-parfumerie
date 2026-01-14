@@ -37,9 +37,8 @@ public class PerfumeResource {
                     .entity("stock must be >= 0").build();
         }
 
-        // Auto available selon stock (si stock renseigné)
-        if (stock != null) {
-            p.setAvailable(stock > 0); // stock=0 => false ; stock>0 => true
+        if (p.getAvailable() == null) {
+            p.setAvailable(true);
         }
 
         return null; // OK
@@ -73,17 +72,17 @@ public class PerfumeResource {
         Perfume existing = em.find(Perfume.class, id);
         if (existing == null) return Response.status(Response.Status.NOT_FOUND).build();
 
-        existing.setName(data.getName());
-        existing.setBrand(data.getBrand());
-        existing.setPrice(data.getPrice());
-        existing.setStock(data.getStock());
-        existing.setFormat(data.getFormat());
-        existing.setDescription(data.getDescription());
-        existing.setGender(data.getGender());
-        existing.setType(data.getType());
-        existing.setComment(data.getComment());
+        if (data.getName() != null) existing.setName(data.getName());
+        if (data.getBrand() != null) existing.setBrand(data.getBrand());
+        if (data.getPrice() != null) existing.setPrice(data.getPrice());
+        if (data.getStock() != null) existing.setStock(data.getStock());
+        if (data.getFormat() != null) existing.setFormat(data.getFormat());
+        if (data.getDescription() != null) existing.setDescription(data.getDescription());
+        if (data.getGender() != null) existing.setGender(data.getGender());
+        if (data.getType() != null) existing.setType(data.getType());
+        if (data.getComment() != null) existing.setComment(data.getComment());
+        if (data.getAvailable() != null) existing.setAvailable(data.getAvailable());
 
-        // Ici on n’utilise PAS data.getAvailable() => c’est calculé depuis le stock
         Response validation = validateAndApplyStockRules(existing);
         if (validation != null) return validation;
 

@@ -81,6 +81,21 @@ const ProductDetailPage = () => {
     );
 
   if (!perfume) return <div>Parfum non trouvé.</div>;
+  if (perfume.available === false) {
+    return (
+      <div style={styles.page}>
+        <style>{css}</style>
+        <div className="detail-wrap">
+          <Link to="/products" style={styles.backLink}>
+            Retour au catalogue
+          </Link>
+          <div style={styles.errorBox}>
+            <b>Indisponible:</b> Ce parfum est desactive.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.page}>
