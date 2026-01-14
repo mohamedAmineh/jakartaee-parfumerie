@@ -1,9 +1,10 @@
 // src/application/useCases/user.js
 import { encodeBasicAuth, getAuthHeaders, setAuthValue } from "../../services/auth";
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
+import { API_BASE_URL } from "../../config/api";
 
-const USERS_API = "http://localhost:8080/starter/api/users";
-const LOGIN_URL = "http://localhost:8080/starter/api/auth/login";
+const USERS_API = `${API_BASE_URL}/users`;
+const LOGIN_URL = `${API_BASE_URL}/auth/login`;
 
 export async function updateMyProfile(userId, payload) {
   const authHeaders = getAuthHeaders();

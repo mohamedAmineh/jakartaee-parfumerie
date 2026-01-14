@@ -3,8 +3,9 @@
 import { createOrderPayload } from "../../domain/models/orders";
 import { clearCart } from "./cart";
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
+import { API_BASE_URL } from "../../config/api";
 
-const ORDERS_API = "http://localhost:8080/starter/api/orders";
+const ORDERS_API = `${API_BASE_URL}/orders`;
 
 export async function createOrderFromCart({ user, items }) {
   if (!items || items.length === 0) {

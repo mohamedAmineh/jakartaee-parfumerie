@@ -1,6 +1,7 @@
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
+import { API_BASE_URL } from "../../config/api";
 
-const NOTIFICATIONS_API = "http://localhost:8080/starter/api/notifications/orders";
+const NOTIFICATIONS_API = `${API_BASE_URL}/notifications/orders`;
 
 export async function fetchOrderNotifications() {
   const res = await httpRequest(NOTIFICATIONS_API, { method: "GET" });

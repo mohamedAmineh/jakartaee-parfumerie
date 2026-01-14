@@ -1,7 +1,8 @@
 import { getAuthHeaders, hasAuth } from "../../services/auth";
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
+import { API_BASE_URL } from "../../config/api";
 
-const ORDERS_API = "http://localhost:8080/starter/api/orders";
+const ORDERS_API = `${API_BASE_URL}/orders`;
 
 export async function fetchUserOrders() {
   if (!hasAuth()) {

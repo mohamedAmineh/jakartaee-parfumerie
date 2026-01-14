@@ -1,8 +1,9 @@
 import { getAuthHeaders, hasAuth } from "../../services/auth";
 import { createPerfumeEntity, isValidPerfume } from "../../domain/models/perfume";
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
+import { API_BASE_URL } from "../../config/api";
 
-const PERFUMES_API = "http://localhost:8080/starter/api/perfumes";
+const PERFUMES_API = `${API_BASE_URL}/perfumes`;
 
 export async function createPerfume(form) {
   if (!isValidPerfume(form)) {

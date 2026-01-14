@@ -1,9 +1,9 @@
 import { getAuthHeaders } from "../../services/auth";
 import { httpRequest, readErrorBody, parseBody } from "../../infrastructure/httpClient";
+import { API_BASE_URL } from "../../config/api";
 
-const BASE = "http://localhost:8080/starter/api";
-const ORDERS_API = `${BASE}/orders`;
-const HIGH_VALUE_API = `${BASE}/orders/high-value`;
+const ORDERS_API = `${API_BASE_URL}/orders`;
+const HIGH_VALUE_API = `${API_BASE_URL}/orders/high-value`;
 
 async function request(url, options = {}) {
   const res = await httpRequest(url, {

@@ -1,8 +1,9 @@
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 import { encodeBasicAuth, setAuthValue, setStoredUser, clearSession } from "../../services/auth";
+import { API_BASE_URL } from "../../config/api";
 
-const LOGIN_URL = "http://localhost:8080/starter/api/auth/login";
-const SIGNUP_URL = "http://localhost:8080/starter/api/users";
+const LOGIN_URL = `${API_BASE_URL}/auth/login`;
+const SIGNUP_URL = `${API_BASE_URL}/users`;
 
 export async function loginUser(email, password) {
   const res = await httpRequest(LOGIN_URL, {

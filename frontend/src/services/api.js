@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:8080/starter/api/perfumes';
+import { API_BASE_URL } from "../config/api";
+
+const API_URL = `${API_BASE_URL}/perfumes`;
 
 export const fetchPerfumes = async () => {
   const response = await fetch(API_URL);
