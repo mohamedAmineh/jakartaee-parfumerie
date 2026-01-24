@@ -1,7 +1,7 @@
 package com.parfumerie.rest;
 
 import com.parfumerie.messaging.HighValueOrderHandler;
-import com.parfumerie.messaging.OrderCreatedEvent;
+import com.parfumerie.messaging.FilteredOrderCreatedEvent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -21,7 +21,7 @@ public class ReviewResource {
     private HighValueOrderHandler highValueOrderHandler;
 
     @GET
-    public List<OrderCreatedEvent> getFlagged() {
+    public List<FilteredOrderCreatedEvent> getFlagged() {
         return highValueOrderHandler.getFlaggedEvents();
     }
 }

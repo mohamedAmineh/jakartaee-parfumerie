@@ -6,7 +6,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
 /**
- * Event-driven Consumer (EIP): reacts to OrderCreatedEvent and enriches the notification store.
+ * Event-driven Consumer (EIP): reacts to filtered order events and enriches the notification store.
  */
 @ApplicationScoped
 public class OrderCreatedEventListener {
@@ -17,7 +17,7 @@ public class OrderCreatedEventListener {
     @Inject
     private DeadLetterChannel deadLetterChannel;
 
-    public void onOrderCreated(@Observes OrderCreatedEvent event) {
+    public void onOrderCreated(@Observes FilteredOrderCreatedEvent event) {
         try {
             notificationService.addOrderCreated(event);
         } catch (Exception ex) {

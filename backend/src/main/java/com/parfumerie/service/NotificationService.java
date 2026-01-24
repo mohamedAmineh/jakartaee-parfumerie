@@ -1,7 +1,7 @@
 package com.parfumerie.service;
 
 import com.parfumerie.domain.Order;
-import com.parfumerie.messaging.OrderCreatedEvent;
+import com.parfumerie.messaging.FilteredOrderCreatedEvent;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
 
@@ -41,7 +41,7 @@ public class NotificationService {
     /**
      * Content Enricher/Event Message: consume an order-created event coming from the async pipeline.
      */
-    public synchronized void addOrderCreated(OrderCreatedEvent event) {
+    public synchronized void addOrderCreated(FilteredOrderCreatedEvent event) {
         if (event == null) return;
 
         OrderNotification n = new OrderNotification();

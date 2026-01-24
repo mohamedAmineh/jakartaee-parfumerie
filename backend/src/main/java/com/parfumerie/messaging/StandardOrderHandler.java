@@ -8,7 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class StandardOrderHandler {
 
-    public void handle(OrderCreatedEvent event) {
+    public void handle(FilteredOrderCreatedEvent event) {
         if (event == null) return;
         System.out.println("[Standard] Commande " + event.getOrderId() + " total=" + event.getTotal() + " traitée normalement");
     }

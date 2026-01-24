@@ -25,7 +25,7 @@ public class OrderContentRouter {
     @Inject
     private DeadLetterChannel deadLetterChannel;
 
-    public void route(@Observes OrderCreatedEvent event) {
+    public void route(@Observes FilteredOrderCreatedEvent event) {
         if (event == null) return;
 
         try {
