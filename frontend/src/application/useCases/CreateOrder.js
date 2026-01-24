@@ -7,7 +7,7 @@ import { API_BASE_URL } from "../../config/api";
 
 const ORDERS_API = `${API_BASE_URL}/orders`;
 
-export async function createOrderFromCart({ user, items }) {
+export async function createOrderFromCart({ user, items, status = "CREATED", testZeroTotal = false }) {
   if (!items || items.length === 0) {
     throw new Error("Panier vide.");
   }
@@ -15,7 +15,7 @@ export async function createOrderFromCart({ user, items }) {
     throw new Error("Connecte-toi avant de confirmer la commande.");
   }
 
-  const payload = createOrderPayload({ userId: user.id, items });
+  const payload = createOrderPayload({ userId: user.id, items, status, testZeroTotal });
 
   const res = await httpRequest(ORDERS_API, {
     method: "POST",

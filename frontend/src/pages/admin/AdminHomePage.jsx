@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchPerfumesList } from "../../application/useCases/perfume";
-import { fetchOrderNotifications } from "../../application/useCases/notifications";
+import { clearOrderNotifications, fetchOrderNotifications } from "../../application/useCases/notifications";
+import { clearDeadLetters, fetchDeadLetters } from "../../application/useCases/deadletters";
+import { fetchHighValueOrderIds } from "../../application/useCases/ordersAdmin";
 import { logoutUser } from "../../application/useCases/auth";
 
 export default function AdminHomePage() {
@@ -16,6 +18,83 @@ export default function AdminHomePage() {
     error: null,
     items: [],
   });
+  const [deadLetters, setDeadLetters] = useState({
+    loading: false,
+    error: null,
+    items: [],
+  });
+  const [highValueCount, setHighValueCount] = useState({
+    loading: false,
+    error: null,
+    count: 0,
+  });
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadHighValueCount() {
+      setHighValueCount((s) => ({ ...s, loading: true, error: null }));
+      try {
+        const ids = await fetchHighValueOrderIds();
+        if (!active) return;
+        setHighValueCount({ loading: false, error: null, count: ids?.size ?? 0 });
+      } catch (err) {
+        if (!active) return;
+        setHighValueCount({ loading: false, error: err?.message || "Erreur", count: 0 });
+      }
+    }
+
+    loadHighValueCount();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadNotifications() {
+      setOrderNotifs((s) => ({ ...s, loading: true, error: null }));
+      try {
+        const data = await fetchOrderNotifications();
+        if (!active) return;
+        setOrderNotifs({ loading: false, error: null, items: data || [] });
+      } catch (err) {
+        if (!active) return;
+        setOrderNotifs({ loading: false, error: err?.message || "Erreur", items: [] });
+      }
+    }
+
+    loadNotifications();
+    const timer = setInterval(loadNotifications, 8000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadDeadLetters() {
+      setDeadLetters((s) => ({ ...s, loading: true, error: null }));
+      try {
+        const data = await fetchDeadLetters();
+        if (!active) return;
+        setDeadLetters({ loading: false, error: null, items: data || [] });
+      } catch (err) {
+        if (!active) return;
+        setDeadLetters({ loading: false, error: err?.message || "Erreur", items: [] });
+      }
+    }
+
+    loadDeadLetters();
+    const timer = setInterval(loadDeadLetters, 10000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
 
   async function handleCheckStock() {
     setStockStatus({ loading: true, error: null, summary: null });
@@ -53,6 +132,46 @@ export default function AdminHomePage() {
       setOrderNotifs({ loading: false, error: null, items: data || [] });
     } catch (err) {
       setOrderNotifs({ loading: false, error: err.message, items: [] });
+    }
+  }
+
+  async function handleFetchDeadLetters() {
+    setDeadLetters((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const data = await fetchDeadLetters();
+      setDeadLetters({ loading: false, error: null, items: data || [] });
+    } catch (err) {
+      setDeadLetters({ loading: false, error: err?.message || "Erreur", items: [] });
+    }
+  }
+
+  async function handleClearDeadLetters() {
+    setDeadLetters((s) => ({ ...s, loading: true, error: null }));
+    try {
+      await clearDeadLetters();
+      setDeadLetters({ loading: false, error: null, items: [] });
+    } catch (err) {
+      setDeadLetters({ loading: false, error: err?.message || "Erreur", items: [] });
+    }
+  }
+
+  async function handleClearNotifications() {
+    setOrderNotifs((s) => ({ ...s, loading: true, error: null }));
+    try {
+      await clearOrderNotifications();
+      setOrderNotifs({ loading: false, error: null, items: [] });
+    } catch (err) {
+      setOrderNotifs((s) => ({ ...s, loading: false, error: err?.message || "Erreur" }));
+    }
+  }
+
+  async function handleRefreshHighValue() {
+    setHighValueCount((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const ids = await fetchHighValueOrderIds();
+      setHighValueCount({ loading: false, error: null, count: ids?.size ?? 0 });
+    } catch (err) {
+      setHighValueCount({ loading: false, error: err?.message || "Erreur", count: 0 });
     }
   }
 
@@ -124,6 +243,35 @@ export default function AdminHomePage() {
           margin-bottom: 28px;
         }
 
+        .admin-home__live {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 14px;
+          border-radius: 18px;
+          border: 1px solid rgba(255, 107, 107, 0.25);
+          background: rgba(255, 255, 255, 0.8);
+        }
+
+        .admin-home__live-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #ff6b6b;
+          box-shadow: 0 0 0 6px rgba(255, 107, 107, 0.2);
+          animation: pulse 1.6s ease-in-out infinite;
+        }
+
+        .admin-home__live-label {
+          font-size: 12px;
+          color: var(--muted);
+          font-weight: 700;
+        }
+
+        .admin-home__live-value {
+          font-weight: 800;
+        }
+
         .admin-home__eyebrow {
           text-transform: uppercase;
           letter-spacing: 0.18em;
@@ -191,6 +339,11 @@ export default function AdminHomePage() {
           gap: 20px;
         }
 
+        .admin-home__grid--wide {
+          margin-top: 24px;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        }
+
         .admin-home__card {
           background: var(--glass);
           border-radius: 20px;
@@ -236,6 +389,114 @@ export default function AdminHomePage() {
         .admin-home__card--primary {
           background: linear-gradient(120deg, rgba(255, 107, 107, 0.15), rgba(255, 176, 136, 0.2));
           border: 1px solid rgba(255, 107, 107, 0.2);
+        }
+
+        .admin-home__inline {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .admin-home__panel {
+          background: var(--glass);
+          border-radius: 20px;
+          padding: 22px;
+          box-shadow: 0 20px 50px rgba(25, 15, 10, 0.12);
+          border: 1px solid rgba(255, 176, 136, 0.2);
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .admin-home__panel-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .admin-home__panel-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .admin-home__panel-label {
+          text-transform: uppercase;
+          letter-spacing: 0.18em;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--muted);
+          margin: 0 0 6px;
+        }
+
+        .admin-home__panel-title {
+          font-family: "Fraunces", "Times New Roman", serif;
+          margin: 0;
+          font-size: 20px;
+        }
+
+        .admin-home__panel-badge {
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: rgba(255, 107, 107, 0.12);
+          color: #b33a2b;
+          font-weight: 800;
+          font-size: 12px;
+        }
+
+        .admin-home__panel-alert {
+          padding: 10px 12px;
+          border-radius: 14px;
+          background: rgba(255, 107, 107, 0.12);
+          border: 1px solid rgba(255, 107, 107, 0.25);
+          color: #b33a2b;
+          font-weight: 700;
+        }
+
+        .admin-home__panel-empty {
+          color: var(--muted);
+          font-weight: 700;
+        }
+
+        .admin-home__panel-list {
+          display: grid;
+          gap: 10px;
+        }
+
+        .admin-home__panel-item {
+          padding: 12px;
+          border-radius: 14px;
+          border: 1px solid rgba(28, 25, 22, 0.08);
+          background: rgba(255, 255, 255, 0.8);
+        }
+
+        .admin-home__panel-item-title {
+          font-weight: 800;
+        }
+
+        .admin-home__panel-item-meta {
+          margin-top: 4px;
+          font-size: 12px;
+          color: var(--muted);
+          font-weight: 600;
+        }
+
+        .admin-home__panel-link {
+          margin-top: 8px;
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 107, 107, 0.35);
+          background: rgba(255, 255, 255, 0.9);
+          color: #b33a2b;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 12px;
         }
 
         .admin-home__highlight {
@@ -287,6 +548,11 @@ export default function AdminHomePage() {
           from { opacity: 0; transform: translateY(18px); }
           to { opacity: 1; transform: translateY(0); }
         }
+
+        @keyframes pulse {
+          0%, 100% { box-shadow: 0 0 0 6px rgba(255, 107, 107, 0.2); }
+          50% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0.1); }
+        }
       `}</style>
 
       <div className="admin-home__wrap">
@@ -297,6 +563,29 @@ export default function AdminHomePage() {
             <p className="admin-home__subtitle">
               Gere le catalogue et prepare les prochaines references en quelques clics.
             </p>
+          </div>
+          <div className="admin-home__live">
+            <span className="admin-home__live-dot" />
+            <div>
+              <div className="admin-home__live-label">Notifications live</div>
+              <div className="admin-home__live-value">{orderNotifs.items.length} commandes</div>
+            </div>
+            <button
+              type="button"
+              className="admin-home__pill-button admin-home__pill-button--ghost"
+              onClick={handleFetchNotifications}
+              disabled={orderNotifs.loading}
+            >
+              {orderNotifs.loading ? "Sync..." : "Rafraichir"}
+            </button>
+            <button
+              type="button"
+              className="admin-home__pill-button admin-home__pill-button--ghost"
+              onClick={handleClearNotifications}
+              disabled={orderNotifs.loading}
+            >
+              Marquer lues
+            </button>
           </div>
         </header>
 
@@ -342,7 +631,19 @@ export default function AdminHomePage() {
               <p className="admin-home__card-text">
                 Consulter/ Modifier/ Supprimer les commandes.
               </p>
-              <span className="admin-home__cta">Ouvrir la gestion -&gt;</span>
+              <div className="admin-home__inline">
+                <span className="admin-home__cta">Ouvrir la gestion -&gt;</span>
+                <button
+                  type="button"
+                  className="admin-home__pill-button admin-home__pill-button--ghost"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRefreshHighValue();
+                  }}
+                >
+                  High-value: {highValueCount.loading ? "..." : highValueCount.count}
+                </button>
+              </div>
             </div>
           </Link>
 
@@ -369,6 +670,109 @@ export default function AdminHomePage() {
             </div>
           </Link>
 
+          <Link
+            to="/admin/aggregates"
+            className="admin-home__card"
+            style={{ textDecoration: "none" }}
+          >
+            <div className="admin-home__stack">
+              <div className="admin-home__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 6h16" />
+                  <path d="M7 12h10" />
+                  <path d="M10 18h4" />
+                </svg>
+              </div>
+              <h2 className="admin-home__card-title">Aggregates</h2>
+              <p className="admin-home__highlight">Regroupements clients</p>
+              <p className="admin-home__card-text">
+                Voir les lots d'events (3 commandes par client).
+              </p>
+              <span className="admin-home__cta">Voir les aggregates -&gt;</span>
+            </div>
+          </Link>
+
+        </section>
+
+        <section className="admin-home__grid admin-home__grid--wide">
+          <div className="admin-home__panel">
+            <div className="admin-home__panel-head">
+              <div>
+                <p className="admin-home__panel-label">Dead letters</p>
+                <h3 className="admin-home__panel-title">Messages filtrés/rejetés</h3>
+              </div>
+              <div className="admin-home__panel-actions">
+                <button
+                  type="button"
+                  className="admin-home__pill-button admin-home__pill-button--ghost"
+                  onClick={handleFetchDeadLetters}
+                  disabled={deadLetters.loading}
+                >
+                  {deadLetters.loading ? "Chargement..." : "Rafraichir"}
+                </button>
+                <button
+                  type="button"
+                  className="admin-home__pill-button admin-home__pill-button--ghost"
+                  onClick={handleClearDeadLetters}
+                  disabled={deadLetters.loading}
+                >
+                  Supprimer
+                </button>
+              </div>
+            </div>
+            {deadLetters.error && (
+              <div className="admin-home__panel-alert">Erreur: {deadLetters.error}</div>
+            )}
+            {deadLetters.items.length === 0 && !deadLetters.loading && (
+              <div className="admin-home__panel-empty">Aucun message pour le moment.</div>
+            )}
+            <div className="admin-home__panel-list">
+              {deadLetters.items.slice(0, 6).map((d, idx) => (
+                <div key={`${d?.type ?? "Unknown"}-${idx}`} className="admin-home__panel-item">
+                  <div className="admin-home__panel-item-title">{d?.type ?? "Unknown"}</div>
+                  <div className="admin-home__panel-item-meta">{d?.reason ?? "—"}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="admin-home__panel">
+            <div className="admin-home__panel-head">
+              <div>
+                <p className="admin-home__panel-label">Flux commandes</p>
+                <h3 className="admin-home__panel-title">Notifications temps réel</h3>
+              </div>
+              <div className="admin-home__panel-badge">
+                {orderNotifs.items.length} events
+              </div>
+            </div>
+            {orderNotifs.error && (
+              <div className="admin-home__panel-alert">Erreur: {orderNotifs.error}</div>
+            )}
+            {orderNotifs.items.length === 0 && !orderNotifs.loading && (
+              <div className="admin-home__panel-empty">Aucune notification.</div>
+            )}
+            <div className="admin-home__panel-list">
+              {orderNotifs.items.slice(0, 6).map((n, idx) => (
+                <div key={`${n?.orderId ?? "order"}-${idx}`} className="admin-home__panel-item">
+                  <div className="admin-home__panel-item-title">
+                    Commande #{n?.orderId ?? "—"}
+                  </div>
+                  <div className="admin-home__panel-item-meta">
+                    {n?.customerEmail ?? "Client inconnu"} · {n?.status ?? "—"}
+                  </div>
+                  {n?.orderId != null && (
+                    <Link
+                      className="admin-home__panel-link"
+                      to={`/admin/orders?q=${encodeURIComponent(n.orderId)}`}
+                    >
+                      Voir commande
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
       </div>
     </div>

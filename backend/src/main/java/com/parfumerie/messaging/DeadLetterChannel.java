@@ -40,4 +40,8 @@ public class DeadLetterChannel {
     public synchronized List<DeadLetter> getAll() {
         return new ArrayList<>(entries);
     }
+
+    public synchronized void clear() {
+        entries.clear();
+    }
 }

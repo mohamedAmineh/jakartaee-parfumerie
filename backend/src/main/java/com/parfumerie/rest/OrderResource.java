@@ -4,6 +4,7 @@ import com.parfumerie.domain.Order;
 import com.parfumerie.domain.OrderItem;
 import com.parfumerie.domain.Perfume;
 import com.parfumerie.domain.User;
+import com.parfumerie.messaging.DeadLetterChannel;
 import com.parfumerie.messaging.OrderEventPublisher;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -31,6 +32,9 @@ public class OrderResource {
     @Inject
     private OrderEventPublisher orderEventPublisher;
 
+    @Inject
+    private DeadLetterChannel deadLetterChannel;
+
     public static class OrderItemDto {
         public Long perfumeId;
         public Integer quantity;
@@ -42,6 +46,7 @@ public class OrderResource {
         public Long userId;
         public String status;
         public List<OrderItemDto> items;
+        public boolean testZeroTotal;
     }
 
     @GET
@@ -104,8 +109,14 @@ public class OrderResource {
             Integer stock = perfume.getStock();
             if (stock != null) {
                 if (stock < qty) {
+                    HashMap<String, Object> payload = new HashMap<>();
+                    payload.put("userId", req.userId);
+                    payload.put("perfumeId", perfume.getId());
+                    payload.put("requestedQty", qty);
+                    payload.put("availableStock", stock);
+                    deadLetterChannel.report(payload, "Out of stock for perfume " + perfume.getId());
                     return Response.status(Response.Status.BAD_REQUEST)
-                            .entity("Not enough stock for perfume " + perfume.getId()).build();
+                        .entity("Not enough stock for perfume " + perfume.getId()).build();
                 }
                 perfume.setStock(stock - qty);
             }
@@ -121,6 +132,10 @@ public class OrderResource {
             order.getItems().add(item);
 
             total = total.add(unitPrice.multiply(BigDecimal.valueOf(qty)));
+        }
+
+        if (req.testZeroTotal) {
+            total = BigDecimal.ZERO;
         }
 
         order.setTotalPrice(total);

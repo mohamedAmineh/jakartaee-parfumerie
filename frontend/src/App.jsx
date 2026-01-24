@@ -17,6 +17,7 @@ import ManageOredrsPage from "./pages/admin/ManageOredrsPage";
 import EditPerfumePage from "./pages/admin/EditPerfumePage";
 import CreatePerfumePage from "./pages/admin/CreatePerfumePage";
 import AdminStatsPage from "./pages/admin/AdminStatsPage";
+import OrderAggregatesPage from "./pages/admin/OrderAggregatesPage";
 
 export default function App() {
   return (
@@ -80,6 +81,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminStatsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="admin/aggregates"
+          element={
+            <AdminRoute>
+              <OrderAggregatesPage />
             </AdminRoute>
           }
         />

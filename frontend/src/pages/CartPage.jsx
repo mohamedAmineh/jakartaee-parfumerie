@@ -15,6 +15,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [testZeroTotal, setTestZeroTotal] = useState(false);
 
   useEffect(() => {
     setItems(loadCart());
@@ -39,9 +40,13 @@ export default function CartPage() {
 
     try {
       const user = getCurrentUser();
-      await createOrderFromCart({ user, items });
+      await createOrderFromCart({ user, items, testZeroTotal });
       
-      setSuccess("Commande enregistrée ! Un admin recevra la notification.");
+      setSuccess(
+        testZeroTotal
+          ? "Commande enregistree (mode test). Elle sera rejetee par le filtre."
+          : "Commande enregistree ! Un admin recevra la notification."
+      );
       setTimeout(() => navigate("/products"), 1200);
     } catch (err) {
       setError(err.message);
@@ -100,6 +105,15 @@ export default function CartPage() {
             <span>Total</span>
             <strong>{total.toFixed(2)} €</strong>
           </div>
+
+          <label style={styles.testRow}>
+            <input
+              type="checkbox"
+              checked={testZeroTotal}
+              onChange={(e) => setTestZeroTotal(e.target.checked)}
+            />
+            <span style={styles.testLabel}>Mode test: total a 0 (notification rejetee)</span>
+          </label>
 
           <button 
             style={styles.primary} 
@@ -198,6 +212,17 @@ const styles = {
     fontSize: 16,
     borderTop: "1px solid rgba(28,25,22,0.08)",
     paddingTop: 10,
+  },
+  testRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 10,
+    fontSize: 14,
+    color: "#6f655c",
+  },
+  testLabel: {
+    fontWeight: 700,
   },
   primary: {
     width: "100%",

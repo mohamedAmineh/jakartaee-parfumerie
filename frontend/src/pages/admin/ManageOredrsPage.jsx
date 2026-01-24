@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { fetchAllOrders, fetchHighValueOrderIds, updateOrderStatus } from "../../application/useCases/ordersAdmin";
 
 const HIGH_VALUE_THRESHOLD = 500;
@@ -26,12 +26,36 @@ function computeOrderTotal(order) {
   return Number.isFinite(sum) ? sum : null;
 }
 
+function normalizeText(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function matchesQuery(value, query) {
+  if (!query) return true;
+  const raw = String(value ?? "").toLowerCase();
+  const qRaw = String(query ?? "").toLowerCase().trim();
+  if (raw.includes(qRaw)) return true;
+  return normalizeText(value).includes(normalizeText(query));
+}
+
+function isHighValueOrder(order, highValueIds) {
+  if (!order) return false;
+  const total = computeOrderTotal(order);
+  return highValueIds.has(order.id) || (total != null && Number(total) >= HIGH_VALUE_THRESHOLD);
+}
+
 export default function ManageOredrsPage() {
+  const location = useLocation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [filter, setFilter] = useState("");
+  const [showHighOnly, setShowHighOnly] = useState(false);
   const [selected, setSelected] = useState(null);
   const [highValueIds, setHighValueIds] = useState(new Set());
 
@@ -39,6 +63,14 @@ export default function ManageOredrsPage() {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get("q");
+    if (q != null) {
+      setFilter(q);
+    }
+  }, [location.search]);
 
   async function refresh() {
     setLoading(true);
@@ -72,14 +104,30 @@ export default function ManageOredrsPage() {
   }
 
   const filtered = useMemo(() => {
-    const q = filter.toLowerCase();
     return data.filter((o) => {
-      const id = String(o.id ?? "").toLowerCase();
-      const email = String(o.user?.email ?? o.userEmail ?? "").toLowerCase();
-      const status = String(o.status ?? "").toLowerCase();
-      return id.includes(q) || email.includes(q) || status.includes(q);
+      if (showHighOnly && !isHighValueOrder(o, highValueIds)) return false;
+      if (!filter) return true;
+
+      const email = o.user?.email ?? o.userEmail ?? o.customerEmail ?? o.email;
+      const firstName = o.user?.firstName;
+      const lastName = o.user?.lastName;
+      const total = computeOrderTotal(o);
+
+      return (
+        matchesQuery(o.id, filter) ||
+        matchesQuery(email, filter) ||
+        matchesQuery(o.status, filter) ||
+        matchesQuery(total, filter) ||
+        matchesQuery(firstName, filter) ||
+        matchesQuery(lastName, filter)
+      );
     });
-  }, [data, filter]);
+  }, [data, filter, showHighOnly, highValueIds]);
+
+  const highValueCount = useMemo(
+    () => data.filter((o) => isHighValueOrder(o, highValueIds)).length,
+    [data, highValueIds]
+  );
 
   useEffect(() => {
     if (!selected) return;
@@ -116,6 +164,15 @@ export default function ManageOredrsPage() {
             </Link>
             <button type="button" className="admin-orders__btn" onClick={refresh} disabled={loading}>
               {loading ? "Chargement..." : "Rafraîchir"}
+            </button>
+            <button
+              type="button"
+              className={`admin-orders__btn admin-orders__btn--ghost admin-orders__btn--toggle ${
+                showHighOnly ? "admin-orders__btn--active" : ""
+              }`}
+              onClick={() => setShowHighOnly((v) => !v)}
+            >
+              Voir high-value ({highValueCount})
             </button>
           </div>
         </header>
@@ -424,6 +481,16 @@ const css = `
   background: rgba(255,255,255,0.9);
   color:#b33a2b;
   box-shadow:none;
+}
+
+.admin-orders__btn--toggle{
+  font-weight:800;
+}
+
+.admin-orders__btn--active{
+  border-color: rgba(255,107,107,0.7);
+  background: rgba(255,107,107,0.15);
+  color:#8f2d21;
 }
 
 .admin-orders__ghost{

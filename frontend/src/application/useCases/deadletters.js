@@ -1,10 +1,10 @@
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 import { API_BASE_URL } from "../../config/api";
 
-const NOTIFICATIONS_API = `${API_BASE_URL}/notifications/orders`;
+const DEADLETTERS_API = `${API_BASE_URL}/deadletters`;
 
-export async function fetchOrderNotifications() {
-  const res = await httpRequest(NOTIFICATIONS_API, { method: "GET" });
+export async function fetchDeadLetters() {
+  const res = await httpRequest(DEADLETTERS_API, { method: "GET" });
 
   if (!res.ok) {
     const text = await readErrorBody(res);
@@ -15,8 +15,8 @@ export async function fetchOrderNotifications() {
   return Array.isArray(data) ? data : [];
 }
 
-export async function clearOrderNotifications() {
-  const res = await httpRequest(NOTIFICATIONS_API, { method: "DELETE" });
+export async function clearDeadLetters() {
+  const res = await httpRequest(`${DEADLETTERS_API}/clear`, { method: "POST" });
 
   if (!res.ok) {
     const text = await readErrorBody(res);

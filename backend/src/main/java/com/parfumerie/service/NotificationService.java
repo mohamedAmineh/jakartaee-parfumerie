@@ -58,6 +58,10 @@ public class NotificationService {
         return new ArrayList<>(events);
     }
 
+    public synchronized void clear() {
+        events.clear();
+    }
+
     private void addNotification(OrderNotification n) {
         events.addFirst(n);
         while (events.size() > MAX_EVENTS) {

@@ -1,9 +1,10 @@
 // src/domain/models/order.js
 
-export function createOrderPayload({ userId, items, status = "PENDING" }) {
+export function createOrderPayload({ userId, items, status = "CREATED", testZeroTotal = false }) {
   return {
     userId,
     status,
+    testZeroTotal,
     items: items.map((it) => ({
       perfumeId: it.id,
       quantity: Number(it.quantity || 1),
