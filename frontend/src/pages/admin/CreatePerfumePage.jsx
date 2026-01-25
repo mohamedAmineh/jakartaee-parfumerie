@@ -1,3 +1,5 @@
+// Admin form for creating a new perfume.
+
 import { useState } from "react";
 import { createPerfume } from "../../application/useCases/perfume";
 
@@ -35,7 +37,7 @@ export default function CreatePerfumePage() {
         ok: `Créé: id=${created.id}`,
       });
 
-      // reset minimal
+      
       setForm((f) => ({ ...f, name: "", brand: "", price: "", description: "", comment: "" }));
     } catch (err) {
       setStatus({ loading: false, error: err?.message || "Erreur.", ok: null });

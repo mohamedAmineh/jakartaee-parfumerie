@@ -1,3 +1,5 @@
+// Customer orders list with detail panel.
+
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchUserOrders } from "../application/useCases/orders";
@@ -31,7 +33,7 @@ export default function MyOrdersPage() {
   useEffect(() => {
     if (!user) return;
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [user]);
 
   const filtered = useMemo(() => {

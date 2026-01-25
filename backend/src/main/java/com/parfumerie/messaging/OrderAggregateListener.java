@@ -3,8 +3,9 @@ package com.parfumerie.messaging;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
+
 /**
- * Event-driven Consumer (EIP): logs aggregate events for traceability.
+ * Logs aggregate events for observability.
  */
 @ApplicationScoped
 public class OrderAggregateListener {

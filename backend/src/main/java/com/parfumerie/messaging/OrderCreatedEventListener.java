@@ -5,8 +5,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
+
 /**
- * Event-driven Consumer (EIP): reacts to filtered order events and enriches the notification store.
+ * Consumes order-created events to update notifications.
  */
 @ApplicationScoped
 public class OrderCreatedEventListener {

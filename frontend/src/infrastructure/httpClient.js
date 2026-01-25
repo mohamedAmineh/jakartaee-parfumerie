@@ -1,3 +1,5 @@
+// HTTP helpers that standardize response parsing and error handling.
+
 export async function httpRequest(url, options = {}) {
   return fetch(url, options);
 }

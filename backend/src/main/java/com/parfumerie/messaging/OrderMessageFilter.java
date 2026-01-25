@@ -7,8 +7,9 @@ import jakarta.inject.Inject;
 
 import java.math.BigDecimal;
 
+
 /**
- * Message Filter (EIP): drops invalid or non-actionable order events.
+ * Filters invalid order events and emits validated ones.
  */
 @ApplicationScoped
 public class OrderMessageFilter {

@@ -1,3 +1,5 @@
+// Client-side session persistence for auth and user data.
+
 import { browserStorage, getJson, setJson } from "./storage";
 
 const USER_KEY = "user";

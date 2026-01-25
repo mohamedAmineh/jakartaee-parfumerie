@@ -7,6 +7,9 @@ import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
 
+/**
+ * CRUD service for perfume catalog entries.
+ */
 @Stateless
 public class PerfumeService {
 
@@ -42,7 +45,7 @@ public class PerfumeService {
         existing.setPrice(data.getPrice());
         existing.setComment(data.getComment());
 
-        return existing; // entity managée -> update au commit
+        return existing; 
     }
 
     public boolean delete(Long id) {

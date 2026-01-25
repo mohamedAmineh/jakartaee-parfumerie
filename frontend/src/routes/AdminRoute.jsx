@@ -1,3 +1,5 @@
+// Route guard that restricts access to admin-only views.
+
 import { Navigate, useLocation } from "react-router-dom";
 import { getCurrentUser, isAuthenticated } from "../application/useCases/session";
 

@@ -1,3 +1,5 @@
+// Top navigation with role-aware links and session shortcuts.
+
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { logoutUser } from "../application/useCases/auth";
@@ -9,7 +11,7 @@ export default function NavBar() {
   const user = getCurrentUser();
   const isLoggedIn = !!user;
 
-  // Visible uniquement si connecté ET role ADMIN
+  
   const isAdmin = isLoggedIn && String(user?.role || "").toUpperCase() === "ADMIN";
 
   const logout = () => {

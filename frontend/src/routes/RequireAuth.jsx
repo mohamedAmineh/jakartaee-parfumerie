@@ -1,3 +1,5 @@
+// Route guard that redirects unauthenticated users to the auth page.
+
 import { Navigate, useLocation } from "react-router-dom";
 import { isAuthenticated } from "../application/useCases/session";
 

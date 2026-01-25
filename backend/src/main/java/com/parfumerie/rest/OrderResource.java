@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Order REST resource: validates items, adjusts stock, and publishes events.
+ */
 @Path("orders")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -38,7 +41,7 @@ public class OrderResource {
     public static class OrderItemDto {
         public Long perfumeId;
         public Integer quantity;
-        // unitPrice ignoré côté serveur (on prend le prix DB)
+        
         public BigDecimal unitPrice;
     }
 
@@ -141,7 +144,7 @@ public class OrderResource {
         order.setTotalPrice(total);
 
         em.persist(order);
-        em.flush(); // ensure ID is generated before returning/publishing
+        em.flush(); 
 
         orderEventPublisher.publishOrderCreated(order);
 

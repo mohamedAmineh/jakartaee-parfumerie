@@ -13,6 +13,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+/**
+ * Catalog entity for perfumes with pricing, stock, and availability.
+ */
 @Entity
 @Table(name = "perfumes")
 public class Perfume {
@@ -24,11 +27,11 @@ public class Perfume {
     @Column(nullable = false)
     private String name;
 
-    private String format;        // 50ml, 100ml...
+    private String format;        
     private String description;
     private String brand;
-    private String gender;        // FEMME / HOMME / UNISEX
-    private String type;          // EDT / EDP / PARFUM
+    private String gender;        
+    private String type;          
 
     private Integer stock;
     private Boolean available;

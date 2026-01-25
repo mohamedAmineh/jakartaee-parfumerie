@@ -1,3 +1,5 @@
+// Admin catalog management and stock overview.
+
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -36,7 +38,7 @@ export default function ManagePerfumesPage() {
     setError(null);
     try {
       await togglePerfumeAvailability(id, available);
-      await refresh(); // refresh complet
+      await refresh(); 
     } catch (err) {
       setError(err?.message || "Erreur lors de la mise à jour.");
     } finally {
@@ -86,7 +88,7 @@ export default function ManagePerfumesPage() {
   }, [data]);
 
   useEffect(() => {
-    // si l'element selectionne n'existe plus, on vide
+    
     if (selected) {
       const stillThere = data.find((p) => p.id === selected.id);
       if (!stillThere) setSelected(null);

@@ -7,6 +7,9 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 
+/**
+ * Guards write operations on perfumes to the ADMIN role.
+ */
 @Provider
 @Priority(Priorities.AUTHORIZATION)
 public class AdminGuardFilter implements ContainerRequestFilter {

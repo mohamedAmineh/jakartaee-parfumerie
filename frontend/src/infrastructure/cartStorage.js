@@ -1,3 +1,5 @@
+// Cart persistence using browser storage.
+
 import { browserStorage, getJson, setJson } from "./storage";
 
 const CART_KEY = "cart";

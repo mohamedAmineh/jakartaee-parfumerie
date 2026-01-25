@@ -9,6 +9,9 @@ import jakarta.jms.Queue;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+/**
+ * Sends JMS messages when a new user is created.
+ */
 @Stateless
 public class UserCreatedProducer {
 

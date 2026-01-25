@@ -1,4 +1,5 @@
-// src/application/useCases/user.js
+// Profile update and password change workflows.
+
 import { encodeBasicAuth, getAuthHeaders, setAuthValue } from "../../services/auth";
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 import { API_BASE_URL } from "../../config/api";
@@ -29,7 +30,7 @@ export async function changeMyPassword({ userId, email, oldPassword, newPassword
   const authHeaders = getAuthHeaders();
   if (!authHeaders.Authorization) throw new Error("Reconnecte-toi pour modifier ton mot de passe.");
 
-  // check ancien mdp
+  
   const check = await httpRequest(LOGIN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -38,7 +39,7 @@ export async function changeMyPassword({ userId, email, oldPassword, newPassword
 
   if (!check.ok) throw new Error("Ancien mot de passe incorrect.");
 
-  // update password
+  
   const res = await httpRequest(`${USERS_API}/${userId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", ...authHeaders },
@@ -53,7 +54,7 @@ export async function changeMyPassword({ userId, email, oldPassword, newPassword
 
   const updated = await parseJson(res);
 
-  // refresh local auth basic
+  
   const authValue = encodeBasicAuth(updated.email || email, newPassword);
   setAuthValue(authValue);
 

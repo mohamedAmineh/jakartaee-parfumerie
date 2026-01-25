@@ -11,6 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
+/**
+ * Applies CORS headers for the frontend origin and handles preflight requests.
+ */
 @WebFilter("/*")
 public class CorsFilter implements Filter {
 
@@ -26,7 +29,7 @@ public class CorsFilter implements Filter {
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         res.setHeader("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization");
 
-        // preflight
+        
         if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
             res.setStatus(HttpServletResponse.SC_OK);
             return;

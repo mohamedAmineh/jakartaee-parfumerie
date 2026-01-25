@@ -1,4 +1,4 @@
-// src/application/useCases/createOrder.js
+// Creates an order from the cart and clears the cart on success.
 
 import { createOrderPayload } from "../../domain/models/orders";
 import { clearCart } from "./cart";

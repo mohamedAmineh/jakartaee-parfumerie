@@ -13,6 +13,9 @@ import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
 
+/**
+ * Seeds demo users and perfumes on startup when the database is empty.
+ */
 @Singleton
 @Startup
 public class DataSeeder {
@@ -24,7 +27,7 @@ public class DataSeeder {
   @Transactional
   public void init() {
 
-    // --- USERS ---
+    
     Long users = em.createQuery("SELECT COUNT(u) FROM User u", Long.class).getSingleResult();
     if (users == 0) {
 
@@ -49,7 +52,7 @@ public class DataSeeder {
       em.persist(client);
     }
 
-    // --- PERFUMES ---
+    
     Long perfumes = em.createQuery("SELECT COUNT(p) FROM Perfume p", Long.class).getSingleResult();
     if (perfumes == 0) {
 

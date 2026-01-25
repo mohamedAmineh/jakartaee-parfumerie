@@ -1,3 +1,5 @@
+// Local storage helpers with JSON serialization and safe fallbacks.
+
 export const browserStorage = {
   getItem(key) {
     try {

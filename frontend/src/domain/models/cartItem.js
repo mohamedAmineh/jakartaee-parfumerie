@@ -1,4 +1,4 @@
-// src/domain/models/cartItem.js
+// Domain helpers for cart items and totals.
 
 export function createCartItem({ id, name, price, quantity = 1 }) {
   return {

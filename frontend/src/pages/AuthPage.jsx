@@ -1,3 +1,5 @@
+// Authentication page for login and signup flows.
+
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { loginUser, signupUser, logoutUser } from "../application/useCases/auth";
@@ -20,7 +22,7 @@ export default function AuthPage() {
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
-  const [mode, setMode] = useState("login"); // login | signup
+  const [mode, setMode] = useState("login"); 
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
 
   const [email, setEmail] = useState("");
@@ -38,7 +40,7 @@ export default function AuthPage() {
 
   const isLogin = mode === "login";
 
-  // clé d'animation: change à chaque switch login/signup
+  
   const [animKey, setAnimKey] = useState(0);
 
   useEffect(() => {
@@ -109,7 +111,7 @@ export default function AuthPage() {
     <div style={styles.page}>
       <style>{css}</style>
 
-      {/* centre vertical/horizontal */}
+      
       <div style={styles.center}>
         <div style={styles.shell}>
           <div style={styles.hero}>
@@ -179,7 +181,7 @@ export default function AuthPage() {
                 </button>
               </div>
 
-              {/* petite animation quand on change de mode */}
+              
               <div key={animKey} className="auth-anim">
                 {success && <div style={styles.success}>{success}</div>}
                 {error && <div style={styles.error}>Erreur: {error}</div>}
@@ -306,7 +308,7 @@ export default function AuthPage() {
 }
 
 const css = `
-/* animation simple: fade + slide */
+
 @keyframes authFadeUp {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -327,15 +329,15 @@ const styles = {
       "radial-gradient(circle at 12% 15%, rgba(255, 177, 136, 0.20), transparent 48%), radial-gradient(circle at 88% 18%, rgba(255, 107, 107, 0.14), transparent 52%), #fffaf6",
   },
 
-  // NOUVEAU: centrage
+  
   center: {
-    minHeight: "calc(100vh - 70px - 28px - 60px)", // essaye de compenser le padding page
+    minHeight: "calc(100vh - 70px - 28px - 60px)", 
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
 
-  // rendu plus "card auth" : moins large, plus centré
+  
   shell: { width: "100%", maxWidth: 520, margin: "0 auto" },
 
   hero: { marginBottom: 14, textAlign: "center" },

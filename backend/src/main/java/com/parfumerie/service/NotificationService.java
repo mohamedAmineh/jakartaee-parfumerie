@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+/**
+ * In-memory store of order notifications.
+ */
 @Singleton
 @Startup
 public class NotificationService {
@@ -38,9 +41,7 @@ public class NotificationService {
         addNotification(n);
     }
 
-    /**
-     * Content Enricher/Event Message: consume an order-created event coming from the async pipeline.
-     */
+    
     public synchronized void addOrderCreated(FilteredOrderCreatedEvent event) {
         if (event == null) return;
 

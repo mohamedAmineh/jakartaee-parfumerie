@@ -12,6 +12,9 @@ import jakarta.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Order item CRUD endpoints with order total recalculation.
+ */
 @Path("orderitems")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -63,7 +66,7 @@ public class OrderItemResource {
 
         em.persist(item);
         
-        // Recalculer le total de l'order
+        
         recalculateOrderTotal(order);
         em.merge(order);
         
@@ -81,7 +84,7 @@ public class OrderItemResource {
         
         em.merge(existing);
         
-        // Recalculer le total de l'order après modification
+        
         Order order = existing.getOrder();
         recalculateOrderTotal(order);
         em.merge(order);
@@ -98,14 +101,14 @@ public class OrderItemResource {
         Order order = oi.getOrder();
         em.remove(oi);
         
-        // Recalculer le total après suppression
+        
         recalculateOrderTotal(order);
         em.merge(order);
         
         return Response.noContent().build();
     }
     
-    // Méthode utilitaire pour recalculer le total
+    
     private void recalculateOrderTotal(Order order) {
         BigDecimal newTotal = order.getItems().stream()
             .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))

@@ -1,3 +1,5 @@
+// Product catalog with filtering and search.
+
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useFetch } from "../hooks/useFetch";
@@ -95,7 +97,7 @@ const ProductsPage = () => {
             <h1 className="catalog-title">Catalogue de Parfums</h1>
           </div>
 
-          {/* optionnel: boutons à droite (tu avais import Link + styles.badge/cartBtn, je les remets propre) */}
+          
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
             {!isLoggedIn ? (
               <Link to="/auth" style={styles.cartBtn}>

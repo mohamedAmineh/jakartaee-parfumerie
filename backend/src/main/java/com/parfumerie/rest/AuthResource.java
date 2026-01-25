@@ -8,6 +8,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+/**
+ * Auth endpoint for login and user summary responses.
+ */
 @Path("auth")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -22,7 +25,7 @@ public class AuthResource {
         public String password;
     }
 
-    // petite DTO pour ne pas renvoyer le hash du password
+    
     public static class UserResponse {
         public Long id;
         public String firstName;

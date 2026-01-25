@@ -1,3 +1,5 @@
+// Simple perfume API helpers for basic catalogue fetches.
+
 import { API_BASE_URL } from "../config/api";
 
 const API_URL = `${API_BASE_URL}/perfumes`;

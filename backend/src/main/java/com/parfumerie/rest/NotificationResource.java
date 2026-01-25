@@ -9,6 +9,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
+/**
+ * Exposes order notifications for the admin UI.
+ */
 @Path("notifications")
 @Produces(MediaType.APPLICATION_JSON)
 public class NotificationResource {

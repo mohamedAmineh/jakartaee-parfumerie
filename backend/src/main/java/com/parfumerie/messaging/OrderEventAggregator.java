@@ -14,8 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
- * Aggregator (EIP): groups order events per customer and emits a summary.
+ * Aggregates filtered order events per customer into batches.
  */
 @ApplicationScoped
 public class OrderEventAggregator {

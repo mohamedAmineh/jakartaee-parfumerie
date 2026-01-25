@@ -1,3 +1,5 @@
+// Application entry point: mounts React and configures the router.
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

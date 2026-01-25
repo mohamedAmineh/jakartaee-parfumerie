@@ -7,8 +7,9 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+
 /**
- * Handler pour les commandes à forte valeur (route dédiée).
+ * Captures high-value orders for manual review.
  */
 @ApplicationScoped
 public class HighValueOrderHandler {

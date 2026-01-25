@@ -6,10 +6,9 @@ import jakarta.inject.Inject;
 
 import java.math.BigDecimal;
 
+
 /**
- * Content-based Router (EIP) :
- * - si total >= seuil, on route vers le handler "high value" (revue manuelle).
- * - sinon, on route vers le handler standard.
+ * Routes order-created events to handlers based on total value.
  */
 @ApplicationScoped
 public class OrderContentRouter {

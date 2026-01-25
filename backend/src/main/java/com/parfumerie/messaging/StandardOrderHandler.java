@@ -2,8 +2,9 @@ package com.parfumerie.messaging;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+
 /**
- * Handler par défaut pour les commandes standards.
+ * Default handler for standard orders.
  */
 @ApplicationScoped
 public class StandardOrderHandler {

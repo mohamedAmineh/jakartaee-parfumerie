@@ -1,3 +1,5 @@
+// Inspect and clear dead letters for diagnostics.
+
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 import { API_BASE_URL } from "../../config/api";
 

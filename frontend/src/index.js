@@ -1,4 +1,5 @@
-// src/index.js
+// Alternate entry point that mounts the app (legacy path).
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';

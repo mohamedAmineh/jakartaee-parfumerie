@@ -1,3 +1,5 @@
+// Shell layout that applies theme and renders navigation plus the active route.
+
 import NavBar from "../components/NavBar";
 import { Outlet, useLocation } from "react-router-dom";
 

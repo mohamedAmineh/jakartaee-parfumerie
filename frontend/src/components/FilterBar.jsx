@@ -1,4 +1,5 @@
-// src/components/FilterBar.jsx
+// Filter controls for the product catalog list.
+
 import React from 'react';
 
 const FilterBar = ({
@@ -12,7 +13,7 @@ const FilterBar = ({
 }) => {
   return (
     <div style={styles.container}>
-      {/* Filtre par marque */}
+      
       <div style={styles.group}>
         <label style={styles.label}>Marque</label>
         <select
@@ -29,7 +30,7 @@ const FilterBar = ({
         </select>
       </div>
 
-      {/* Filtre prix min */}
+      
       <div style={styles.group}>
         <label style={styles.label}>Prix min</label>
         <input
@@ -41,7 +42,7 @@ const FilterBar = ({
         />
       </div>
 
-      {/* Filtre prix max */}
+      
       <div style={styles.group}>
         <label style={styles.label}>Prix max</label>
         <input

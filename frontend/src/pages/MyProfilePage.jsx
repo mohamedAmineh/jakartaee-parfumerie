@@ -1,3 +1,5 @@
+// Customer profile view and edit form.
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 

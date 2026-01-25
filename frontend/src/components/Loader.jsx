@@ -1,4 +1,5 @@
-// src/components/Loader.jsx
+// Lightweight loader used during async states.
+
 import React from 'react';
 
 const Loader = ({ message = 'Chargement en cours...' }) => {

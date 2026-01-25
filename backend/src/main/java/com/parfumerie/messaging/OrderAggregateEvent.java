@@ -4,8 +4,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+
 /**
- * Aggregated Message (EIP): summary of multiple order events for one customer.
+ * Aggregate event summarizing a batch of orders for one customer.
  */
 public class OrderAggregateEvent implements Serializable {
 

@@ -10,8 +10,9 @@ import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
 
+
 /**
- * Expose les commandes routées vers la revue manuelle (high value).
+ * Exposes high-value orders queued for manual review.
  */
 @Path("orders/high-value")
 @Produces(MediaType.APPLICATION_JSON)

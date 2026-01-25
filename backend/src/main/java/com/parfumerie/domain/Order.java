@@ -16,6 +16,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+/**
+ * Order aggregate root with items, totals, and delivery info.
+ */
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -24,7 +27,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // FK vers User
+    
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -32,7 +35,7 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Column(nullable = false, length = 20)
-    private String status;  // CREATED / PAID / SHIPPED ...
+    private String status;  
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
@@ -43,13 +46,13 @@ public class Order {
     @Column(length = 255)
     private String shippingAddress;
 
-    // 1 Order -> n OrderItem
+    
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
     public Order() {}
 
-    // + getters / setters…
+    
 
     public Long getId() { return id; }
 

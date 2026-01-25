@@ -1,3 +1,5 @@
+// Fetches orders for the current authenticated user.
+
 import { getAuthHeaders, hasAuth } from "../../services/auth";
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 import { API_BASE_URL } from "../../config/api";

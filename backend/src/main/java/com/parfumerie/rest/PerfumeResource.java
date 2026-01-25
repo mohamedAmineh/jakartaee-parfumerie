@@ -10,6 +10,9 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
+/**
+ * Perfume CRUD REST resource with basic validation rules.
+ */
 @Path("perfumes")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -31,7 +34,7 @@ public class PerfumeResource {
 
         Integer stock = p.getStock();
 
-        // Interdire stock négatif
+        
         if (stock != null && stock < 0) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("stock must be >= 0").build();
@@ -41,7 +44,7 @@ public class PerfumeResource {
             p.setAvailable(true);
         }
 
-        return null; // OK
+        return null; 
     }
 
     @GET
@@ -86,7 +89,7 @@ public class PerfumeResource {
         Response validation = validateAndApplyStockRules(existing);
         if (validation != null) return validation;
 
-        // existing est managé, pas besoin de merge
+        
         return Response.ok(existing).build();
     }
 

@@ -17,6 +17,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.Base64;
 
+/**
+ * Builds a SecurityContext from a Bearer token containing base64 email:password.
+ */
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 public class BasicAuthFilter implements ContainerRequestFilter {

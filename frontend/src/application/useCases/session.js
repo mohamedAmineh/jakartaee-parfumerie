@@ -1,3 +1,5 @@
+// Session accessors for current user and auth state.
+
 import { sessionStorage } from "../../infrastructure/sessionStorage";
 
 const emptySessionStore = {

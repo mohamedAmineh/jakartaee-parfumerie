@@ -1,3 +1,5 @@
+// Cart use cases wired to the storage adapter.
+
 import { cartStorage } from "../../infrastructure/cartStorage";
 import {
   loadCart as loadCartDomain,

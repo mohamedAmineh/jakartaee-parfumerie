@@ -1,3 +1,5 @@
+// Fetches order aggregates for admin analytics screens.
+
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 import { API_BASE_URL } from "../../config/api";
 

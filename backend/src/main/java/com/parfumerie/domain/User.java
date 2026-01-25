@@ -8,6 +8,9 @@ import jakarta.json.bind.annotation.JsonbTransient;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * User entity storing profile details and credential hash.
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -36,9 +39,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Role role = Role.CLIENT; // défaut
+    private Role role = Role.CLIENT; 
 
-    // 1 User -> n Orders
+    
     @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JsonbTransient
     private List<Order> orders = new ArrayList<>();

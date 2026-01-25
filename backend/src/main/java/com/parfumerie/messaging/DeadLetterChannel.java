@@ -8,8 +8,9 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+
 /**
- * Dead Letter Channel (EIP): stocke les messages qui n'ont pas pu être routés/traités.
+ * Dead letter buffer for rejected or failed messages.
  */
 @ApplicationScoped
 public class DeadLetterChannel {

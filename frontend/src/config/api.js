@@ -1,3 +1,5 @@
+// Centralized API base URL with environment override support.
+
 const DEFAULT_API_BASE = "http://localhost:8080/starter/api";
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || DEFAULT_API_BASE;

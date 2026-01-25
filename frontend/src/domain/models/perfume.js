@@ -1,4 +1,4 @@
-// src/domain/models/perfume.js
+// Domain mappers and validation helpers for perfumes.
 
 export function createPerfumeEntity(form) {
   return {

@@ -4,8 +4,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+
 /**
- * Filtered Event Message (EIP): validated order-created payload.
+ * Validated order event used by the aggregation pipeline.
  */
 public class FilteredOrderCreatedEvent implements Serializable {
 

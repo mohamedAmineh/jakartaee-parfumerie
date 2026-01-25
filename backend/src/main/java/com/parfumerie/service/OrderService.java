@@ -13,6 +13,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Service for simple order creation with stock checks.
+ */
 @Stateless
 public class OrderService {
 
@@ -28,10 +31,7 @@ public class OrderService {
                  .getResultList();
     }
 
-    /**
-     * Crée une commande avec une seule ligne (simple pour démarrer).
-     * Tu peux ensuite étendre vers une liste d’items.
-     */
+    
     public Order createOrder(Long userId, Long perfumeId, int quantity) {
         if (quantity <= 0) throw new IllegalArgumentException("quantity must be > 0");
 
@@ -45,7 +45,7 @@ public class OrderService {
             throw new IllegalArgumentException("Not enough stock");
         }
 
-        // 1) créer la commande
+        
         Order order = new Order();
         order.setUser(user);
         order.setOrderDate(LocalDateTime.now());
@@ -55,7 +55,7 @@ public class OrderService {
 
         em.persist(order);
 
-        // 2) créer la ligne
+        
         OrderItem item = new OrderItem();
         item.setOrder(order);
         item.setPerfume(perfume);
@@ -64,7 +64,7 @@ public class OrderService {
 
         em.persist(item);
 
-        // 3) mettre à jour stock + total
+        
         if (perfume.getStock() != null) {
             perfume.setStock(perfume.getStock() - quantity);
         }

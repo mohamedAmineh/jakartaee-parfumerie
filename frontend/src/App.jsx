@@ -1,3 +1,5 @@
+// Route map for client and admin sections, wrapped by the main layout.
+
 import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout";
@@ -23,7 +25,7 @@ import OrderAggregatesPage from "./pages/admin/OrderAggregatesPage";
 export default function App() {
   return (
     <Routes>
-      {/* Tout ce qui est ici aura le NavBar via MainLayout */}
+      
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="products" element={<ProductsPage />} />
@@ -34,7 +36,7 @@ export default function App() {
         <Route path="orders" element={<MyOrdersPage />} />
         <Route path="profile" element={<MyProfilePage />} />
 
-        {/* Admin */}
+        
 
 
         <Route

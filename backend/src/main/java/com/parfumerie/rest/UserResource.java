@@ -13,6 +13,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+/**
+ * User registration and profile update endpoints with best-effort JMS dispatch.
+ */
 @Path("users")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -52,7 +55,7 @@ public class UserResource {
             User created = userService.createUser(
                     req.firstName, req.lastName, req.email, req.phone, req.password, req.address, null
             );
-            // Best-effort JMS : ne bloque pas si JMS absent
+            
             try {
                 userCreatedProducer.sendUserCreatedEvent(created);
             } catch (Exception e) {

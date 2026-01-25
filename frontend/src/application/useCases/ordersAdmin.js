@@ -1,3 +1,5 @@
+// Admin order operations and high-value order discovery.
+
 import { getAuthHeaders } from "../../services/auth";
 import { httpRequest, readErrorBody, parseBody } from "../../infrastructure/httpClient";
 import { API_BASE_URL } from "../../config/api";
@@ -19,10 +21,10 @@ async function request(url, options = {}) {
     throw new Error(body || `HTTP ${res.status} ${res.statusText || ""}`.trim());
   }
 
-  // 204 No Content
+  
   if (res.status === 204) return null;
 
-  // si backend renvoie vide parfois
+  
   return parseBody(res);
 }
 
@@ -31,10 +33,7 @@ export async function fetchAllOrders() {
   return Array.isArray(data) ? data : [];
 }
 
-/**
- * Retourne un Set d'IDs de commandes "high value"
- * Supporte: [{orderId:3}], [{id:3}], [3,4]
- */
+
 export async function fetchHighValueOrderIds() {
   const payload = await request(HIGH_VALUE_API, { method: "GET" });
 

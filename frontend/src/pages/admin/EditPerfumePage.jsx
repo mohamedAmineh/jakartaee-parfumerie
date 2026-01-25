@@ -1,3 +1,5 @@
+// Admin form for editing a perfume.
+
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { fetchPerfumeById, updatePerfume } from "../../application/useCases/perfume";
@@ -23,7 +25,7 @@ export default function EditPerfumePage() {
 
   useEffect(() => {
     loadPerfume();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [id]);
 
   async function loadPerfume() {

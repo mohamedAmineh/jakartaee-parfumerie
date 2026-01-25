@@ -12,6 +12,9 @@ import jakarta.jms.Queue;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+/**
+ * Polls the JMS queue on schedule and logs user-created messages.
+ */
 @Singleton
 @Startup
 public class UserCreatedPollingConsumer {
@@ -36,7 +39,7 @@ public class UserCreatedPollingConsumer {
                 }
             }
         } catch (NamingException ex) {
-            // JMS non configuré : on skip sans bloquer le déploiement
+            
         } catch (Exception ex) {
             System.err.println("JMS poll error: " + ex.getMessage());
         }

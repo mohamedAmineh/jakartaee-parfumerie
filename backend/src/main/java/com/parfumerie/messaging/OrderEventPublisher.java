@@ -5,8 +5,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 
+
 /**
- * Message Endpoint (producer side): publishes an Event Message into the CDI event bus.
+ * Publishes order-created events into the CDI event bus.
  */
 @ApplicationScoped
 public class OrderEventPublisher {
@@ -17,7 +18,7 @@ public class OrderEventPublisher {
     public void publishOrderCreated(Order order) {
         OrderCreatedEvent payload = OrderCreatedEvent.from(order);
         if (payload == null) return;
-        // fire = synchrone ici pour garantir le routing/handlers immédiats (debug plus simple)
+        
         orderCreatedEvents.fire(payload);
     }
 }

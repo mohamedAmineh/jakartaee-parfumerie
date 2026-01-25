@@ -10,6 +10,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+/**
+ * Exposes and clears dead letters from the messaging pipeline.
+ */
 @Path("deadletters")
 @Produces(MediaType.APPLICATION_JSON)
 public class DeadLetterResource {

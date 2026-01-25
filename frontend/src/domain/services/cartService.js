@@ -1,4 +1,5 @@
-// src/domain/services/cartService.js
+// Pure cart operations decoupled from storage concerns.
+
 import { createCartItem, cartItemTotal } from "../models/cartItem";
 
 const emptyCartStore = {

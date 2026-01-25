@@ -1,3 +1,5 @@
+// Generic data-fetch hook with loading and error state handling.
+
 import { useState, useEffect } from 'react';
 
 export const useFetch = (fetchFunction) => {
@@ -29,7 +31,7 @@ export const useFetch = (fetchFunction) => {
     loadData();
 
     return () => {
-      isMounted = false; // Cleanup pour éviter memory leaks
+      isMounted = false; 
     };
   }, [fetchFunction]);
 

@@ -1,3 +1,5 @@
+// Admin dashboard landing with quick stats and actions.
+
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchPerfumesList } from "../../application/useCases/perfume";

@@ -1,3 +1,5 @@
+// Shopping cart view with checkout action.
+
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {

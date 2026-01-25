@@ -8,6 +8,9 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import org.mindrot.jbcrypt.BCrypt;
 
+/**
+ * User business logic: validation, hashing, authentication, and updates.
+ */
 @Stateless
 public class UserService {
 
@@ -59,7 +62,7 @@ public class UserService {
         q.setParameter("email", email);
         User u = q.getResultStream().findFirst().orElse(null);
         if (u != null) {
-            // Reload from DB in case the row was updated outside JPA (eg. manual SQL update).
+            
             em.refresh(u);
         }
         return u;

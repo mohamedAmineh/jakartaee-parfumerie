@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.*;
 
+/**
+ * Order line item that binds a perfume and quantity to an order.
+ */
 @Entity
 @Table(name = "order_items")
 public class OrderItem {
@@ -14,7 +17,7 @@ public class OrderItem {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "order_id")
-    @JsonbTransient  // <-- AJOUTE CETTE LIGNE pour éviter la référence circulaire
+    @JsonbTransient  
     private Order order;
 
     @ManyToOne(optional = false)
@@ -29,7 +32,7 @@ public class OrderItem {
 
     public OrderItem() {}
 
-    // Getters / Setters
+    
     public Long getId() {
         return id;
     }

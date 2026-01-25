@@ -1,3 +1,5 @@
+// Fetch and clear order notifications for admins.
+
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 import { API_BASE_URL } from "../../config/api";
 

@@ -1,3 +1,5 @@
+// Auth workflow for login, signup, and session teardown.
+
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";
 import { encodeBasicAuth, setAuthValue, setStoredUser, clearSession } from "../../services/auth";
 import { API_BASE_URL } from "../../config/api";

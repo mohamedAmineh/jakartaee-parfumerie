@@ -6,8 +6,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+
 /**
- * Event Message (EIP): immutable payload describing that an order has been created.
+ * Immutable event describing a created order.
  */
 public class OrderCreatedEvent implements Serializable {
 

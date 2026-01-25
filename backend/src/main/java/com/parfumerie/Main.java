@@ -11,17 +11,20 @@ import com.parfumerie.domain.User;
 
 import jakarta.persistence.EntityManager;
 
+/**
+ * Standalone runner to exercise JPA outside the container for manual testing.
+ */
 public class Main {
 
     public static void main(String[] args) {
 
-        // Avant de lancer : docker compose up -d
+        
         EntityManager em = PersistenceManager.createEntityManager();
 
         try {
             em.getTransaction().begin();
 
-            // ---- PERFUME ----
+            
             Perfume p = new Perfume();
             p.setName("Dior Sauvage");
             p.setBrand("Dior");
@@ -31,7 +34,7 @@ public class Main {
             p.setStock(10);
             em.persist(p);
 
-            // ---- USER ----
+            
             User user = new User();
             user.setFirstName("Mohamed");
             user.setLastName("Ouberka");
@@ -41,7 +44,7 @@ public class Main {
             user.setPhone("0600000000");
             em.persist(user);
 
-            // ---- ORDER ----
+            
             Order order = new Order();
             order.setUser(user);
             order.setOrderDate(LocalDateTime.now());
@@ -51,7 +54,7 @@ public class Main {
             order.setTotalPrice(new BigDecimal("89.90"));
             em.persist(order);
 
-            // ---- ORDER ITEM ----
+            
             OrderItem item = new OrderItem();
             item.setOrder(order);
             item.setPerfume(p);

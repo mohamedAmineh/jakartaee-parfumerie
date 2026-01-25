@@ -1,4 +1,4 @@
-// src/domain/models/order.js
+// Builds order payloads from cart items.
 
 export function createOrderPayload({ userId, items, status = "CREATED", testZeroTotal = false }) {
   return {

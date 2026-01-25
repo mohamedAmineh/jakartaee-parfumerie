@@ -1,3 +1,5 @@
+// Admin analytics view for orders and revenue.
+
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchAllOrders } from "../../application/useCases/ordersAdmin";
@@ -105,7 +107,7 @@ export default function AdminStatsPage() {
       const stillThere = stats.topPerfumes.find((p) => p.id === selected.id);
       setSelected(stillThere || stats.topPerfumes[0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [stats.topPerfumes]);
 
   const daily = useMemo(() => {

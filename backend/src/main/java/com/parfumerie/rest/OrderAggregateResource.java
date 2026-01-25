@@ -10,6 +10,9 @@ import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
 
+/**
+ * Exposes recent order aggregates for analytics views.
+ */
 @Path("orders/aggregates")
 @Produces(MediaType.APPLICATION_JSON)
 public class OrderAggregateResource {

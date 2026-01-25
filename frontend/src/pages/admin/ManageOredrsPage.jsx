@@ -1,3 +1,5 @@
+// Admin order management list and detail view.
+
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { fetchAllOrders, fetchHighValueOrderIds, updateOrderStatus } from "../../application/useCases/ordersAdmin";
@@ -61,7 +63,7 @@ export default function ManageOredrsPage() {
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   useEffect(() => {
@@ -133,7 +135,7 @@ export default function ManageOredrsPage() {
     if (!selected) return;
     const stillThere = data.find((o) => o.id === selected.id);
     setSelected(stillThere || null);
-  }, [data]); // volontairement sans selected (sinon boucle)
+  }, [data]); 
 
   const selectedTotal = useMemo(() => computeOrderTotal(selected), [selected]);
 
@@ -180,7 +182,7 @@ export default function ManageOredrsPage() {
         {error && <div className="admin-orders__alert">Erreur: {error}</div>}
 
         <div className="admin-orders__grid">
-          {/* LISTE */}
+          
           <div className="admin-orders__card">
             <input
               className="admin-orders__input"
@@ -228,7 +230,7 @@ export default function ManageOredrsPage() {
             </div>
           </div>
 
-          {/* DETAILS */}
+          
           <div className="admin-orders__card">
             {!selected ? (
               <div className="admin-orders__empty">Sélectionne une commande dans la liste.</div>
@@ -354,9 +356,7 @@ export default function ManageOredrsPage() {
   );
 }
 
-/* =======================
-   CSS (inline)
-   ======================= */
+
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap');
 

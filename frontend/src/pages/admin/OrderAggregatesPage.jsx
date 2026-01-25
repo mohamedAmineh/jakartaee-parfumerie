@@ -1,3 +1,5 @@
+// Admin view of order aggregates by customer.
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchOrderAggregates } from "../../application/useCases/aggregates";
@@ -101,7 +103,7 @@ export default function OrderAggregatesPage() {
 }
 
 const css = `
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap');
+@import url('https:
 
 .admin-aggregates{
   --cream:#fff6ef;

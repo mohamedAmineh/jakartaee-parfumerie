@@ -1,3 +1,5 @@
+// Perfume CRUD operations for admin and public views.
+
 import { getAuthHeaders, hasAuth } from "../../services/auth";
 import { createPerfumeEntity, isValidPerfume } from "../../domain/models/perfume";
 import { httpRequest, readErrorBody, parseJson } from "../../infrastructure/httpClient";

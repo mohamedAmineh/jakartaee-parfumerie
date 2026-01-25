@@ -1,3 +1,5 @@
+// Client-side auth helpers for encoding and storing credentials.
+
 import { browserStorage, getJson, setJson } from "../infrastructure/storage";
 
 const AUTH_KEY = "auth";
