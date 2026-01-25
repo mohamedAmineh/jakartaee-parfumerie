@@ -1,5 +1,7 @@
 package com.parfumerie.bootstrap;
 
+import java.math.BigDecimal;
+
 import com.parfumerie.domain.Perfume;
 import com.parfumerie.domain.Role;
 import com.parfumerie.domain.User;
@@ -10,8 +12,6 @@ import jakarta.ejb.Startup;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-
-import java.math.BigDecimal;
 
 /**
  * Seeds demo users and perfumes on startup when the database is empty.
@@ -79,6 +79,10 @@ public class DataSeeder {
 
       em.persist(perfume("Patchouli Chic", "Niche Studio", "50ml", "EDP", "UNISEX", 3, true, "89.90",
         "Patchouli moderne, cacao léger.", "Stock faible"));
+      
+      em.persist(perfume("Étoile d'Ambre", "Maison Lumière", "100ml", "EDP", "UNISEX", 19, true, "129",
+        "Ambre, vanille, bois doux, sillage chaleureux.", "Parfait en soirée."));
+
     }
   }
 
