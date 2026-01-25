@@ -10,6 +10,7 @@ import AuthPage from "./pages/AuthPage";
 import CartPage from "./pages/CartPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
 import MyProfilePage from "./pages/MyProfilePage";
+import HomePage from "./pages/HomePage";
 
 import AdminHomePage from "./pages/admin/AdminHomePage";
 import ManagePerfumesPage from "./pages/admin/ManagePerfumesPage";
@@ -24,7 +25,7 @@ export default function App() {
     <Routes>
       {/* Tout ce qui est ici aura le NavBar via MainLayout */}
       <Route path="/" element={<MainLayout />}>
-        <Route index element={<ProductsPage />} />
+        <Route index element={<HomePage />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="product/:id" element={<ProductDetailPage />} />
 

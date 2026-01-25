@@ -93,9 +93,6 @@ const ProductsPage = () => {
         <div className="catalog-header">
           <div>
             <h1 className="catalog-title">Catalogue de Parfums</h1>
-            <p className="catalog-subtitle">
-              Explore des references fines avec un style harmonisé à l’espace admin.
-            </p>
           </div>
 
           {/* optionnel: boutons à droite (tu avais import Link + styles.badge/cartBtn, je les remets propre) */}
